@@ -1,0 +1,193 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: architech
+      POSTGRES_USER: architech
+      POSTGRES_PASSWORD: architech_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - architech-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - architech-network
+
+  # Message Queue
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - architech-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - architech-network
+
+  # Backend Services
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-jwt-secret-key
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - architech-network
+    volumes:
+      - ./services/user-service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  project-service:
+    build:
+      context: ./services/project-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      USER_SERVICE_URL: http://user-service:8000
+    ports:
+      - "8002:8000"
+    depends_on:
+      - postgres
+      - user-service
+    networks:
+      - architech-network
+    volumes:
+      - ./services/project-service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  design-service:
+    build:
+      context: ./services/design-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      PROJECT_SERVICE_URL: http://project-service:8000
+    ports:
+      - "8003:8000"
+    depends_on:
+      - postgres
+      - project-service
+    networks:
+      - architech-network
+    volumes:
+      - ./services/design-service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  simulation-orchestration-service:
+    build:
+      context: ./services/simulation-orchestration-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      DESIGN_SERVICE_URL: http://design-service:8000
+      SIMULATION_ENGINE_URL: http://simulation-engine:8080
+    ports:
+      - "8004:8000"
+    depends_on:
+      - postgres
+      - design-service
+    networks:
+      - architech-network
+    volumes:
+      - ./services/simulation-orchestration-service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Simulation Engine (Go service)
+  simulation-engine:
+    build:
+      context: ./simulation-engine
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BROKERS: kafka:9092
+      REDIS_URL: redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - redis
+    networks:
+      - architech-network
+    volumes:
+      - ./simulation-engine:/app
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - user-service
+      - project-service
+      - design-service
+      - simulation-orchestration-service
+    networks:
+      - architech-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    environment:
+      USER_SERVICE_URL: http://user-service:8000
+      PROJECT_SERVICE_URL: http://project-service:8000
+      DESIGN_SERVICE_URL: http://design-service:8000
+      SIMULATION_SERVICE_URL: http://simulation-orchestration-service:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user-service
+      - project-service
+      - design-service
+      - simulation-orchestration-service
+    networks:
+      - architech-network
+    volumes:
+      - ./services/api-gateway:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+
+networks:
+  architech-network:
+    driver: bridge
+
