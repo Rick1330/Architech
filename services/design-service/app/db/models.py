@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, String, DateTime, ForeignKey, Text, Integer
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.types import JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -12,7 +13,7 @@ class Design(Base):
     name = Column(String, nullable=False)
     description = Column(Text)
     project_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    design_data = Column(JSONB, nullable=False, default={})
+    design_data = Column(JSON, nullable=False, default={})
     version = Column(Integer, default=1)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -24,7 +25,7 @@ class DesignVersion(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     design_id = Column(UUID(as_uuid=True), ForeignKey("designs.id", ondelete="CASCADE"), nullable=False)
     version_number = Column(Integer, nullable=False)
-    design_data = Column(JSONB, nullable=False, default={})
+    design_data = Column(JSON, nullable=False, default={})
     commit_message = Column(String)
     created_by = Column(UUID(as_uuid=True), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -40,8 +41,8 @@ class Component(Base):
     type = Column(String, nullable=False)  # service, database, queue, etc.
     category = Column(String, nullable=False)  # compute, storage, messaging, etc.
     description = Column(Text)
-    properties_schema = Column(JSONB, nullable=False, default={})
-    default_properties = Column(JSONB, nullable=False, default={})
+    properties_schema = Column(JSON, nullable=False, default={})
+    default_properties = Column(JSON, nullable=False, default={})
     icon_url = Column(String)
     is_custom = Column(Boolean, default=False)
     created_by = Column(UUID(as_uuid=True))

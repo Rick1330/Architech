@@ -24,3 +24,17 @@ async def root():
     return {"message": "Project Service is running!"}
 
 
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "project-service"}
+
+
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "project-service"}
+
+
