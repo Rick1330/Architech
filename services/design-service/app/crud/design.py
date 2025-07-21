@@ -5,6 +5,20 @@ from ..schemas.design import DesignCreate, DesignUpdate, DesignVersionCreate, Co
 from typing import Optional, List
 import uuid
 
+def create_design_version(db: Session, design_id: str, version: DesignVersionCreate) -> DesignVersion:
+    """Create a new version for a design."""
+    db_version = DesignVersion(
+        design_id=design_id,
+        version_number=version.version_number,
+        design_data=version.design_data,
+        commit_message=version.commit_message,
+        created_by=version.created_by
+    )
+    db.add(db_version)
+    db.commit()
+    db.refresh(db_version)
+    return db_version
+
 def get_design_by_id(db: Session, design_id: str) -> Optional[Design]:
     """Get design by ID."""
     return db.query(Design).filter(Design.id == design_id).first()
@@ -58,20 +72,6 @@ def delete_design(db: Session, design_id: str):
         db.commit()
         return True
     return False
-
-def create_design_version(db: Session, design_id: str, version: DesignVersionCreate) -> DesignVersion:
-    """Create a new version for a design."""
-    db_version = DesignVersion(
-        design_id=design_id,
-        version_number=version.version_number,
-        design_data=version.design_data,
-        commit_message=version.commit_message,
-        created_by=version.created_by
-    )
-    db.add(db_version)
-    db.commit()
-    db.refresh(db_version)
-    return db_version
 
 def get_design_versions(db: Session, design_id: str, skip: int = 0, limit: int = 100) -> List[DesignVersion]:
     """Get all versions for a design."""
