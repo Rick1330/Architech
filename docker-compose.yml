@@ -111,11 +111,14 @@ services:
       DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
       DESIGN_SERVICE_URL: http://design-service:8000
       SIMULATION_ENGINE_URL: http://simulation-engine:8080
+      REDIS_URL: redis://redis:6379
     ports:
       - "8004:8000"
     depends_on:
       - postgres
       - design-service
+      - redis
+      - simulation-engine
     networks:
       - architech-network
     volumes:

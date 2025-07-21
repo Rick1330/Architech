@@ -21,7 +21,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     user = crud_user.get_user_by_email(db, email)
     if user is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
     return user
@@ -64,7 +64,7 @@ def login_user(user_credentials: UserLogin, db: Session = Depends(get_db)):
         )
     
     access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 @router.get("/users/me", response_model=User)
 def get_current_user_info(current_user: User = Depends(get_current_user)):

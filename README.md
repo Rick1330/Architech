@@ -44,7 +44,7 @@ This project is licensed under the [License Name] License - see the `LICENSE.md`
 
 ---
 
-**Author:** Manus AI
+**Author:** Elshaday Mengesha
 
 **Date:** 2025-07-20
 
