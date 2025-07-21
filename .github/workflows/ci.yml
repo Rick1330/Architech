@@ -77,8 +77,15 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/user-service
-        pip install httpx # Explicitly install httpx before requirements.txt
+        echo "--- Diagnosing Python Environment ---"
+        python --version
+        pip --version
+        pwd
+        ls -l requirements.txt
+        pip install httpx==0.27.0 # Explicitly install httpx with a specific version
         pip install -r requirements.txt
+        pip freeze
+        echo "--- End Diagnosis ---"
         pytest tests/ -v --cov=app --cov-report=xml
 
     - name: Test Project Service
