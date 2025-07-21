@@ -83,7 +83,7 @@ jobs:
         pwd
         ls -l requirements.txt
         pip install httpx==0.27.0 # Explicitly install httpx with a specific version
-        pip install pydantic-settings==2.2.1 # Explicitly install pydantic-settings with a specific version
+        pip install pydantic-settings==2.2.1 --force-reinstall --no-cache-dir # Force install pydantic-settings
         pip install -r requirements.txt
         pip freeze
         echo "--- End Diagnosis ---"
