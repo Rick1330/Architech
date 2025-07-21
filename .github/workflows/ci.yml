@@ -77,8 +77,8 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/user-service
+        pip install httpx # Explicitly install httpx before requirements.txt
         pip install -r requirements.txt
-        pip install httpx # Explicitly install httpx
         pytest tests/ -v --cov=app --cov-report=xml
 
     - name: Test Project Service
