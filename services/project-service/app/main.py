@@ -17,24 +17,13 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-app.include_router(projects.router, prefix=settings.API_V1_STR, tags=["projects"])
+app.include_router(projects.router, prefix=f"{settings.API_V1_STR}/projects", tags=["projects"])
 
 @app.get("/")
 async def root():
     return {"message": "Project Service is running!"}
 
-
-
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "project-service"}
-
-
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "project-service"}
-
 

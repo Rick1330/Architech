@@ -3,9 +3,9 @@ module simulation-engine
 go 1.21
 
 require (
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gorilla/websocket v1.5.1
 	github.com/segmentio/kafka-go v0.4.47
-	github.com/go-redis/redis/v8 v8.11.5
 )
 
 require (
@@ -15,4 +15,3 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	golang.org/x/net v0.17.0 // indirect
 )
-

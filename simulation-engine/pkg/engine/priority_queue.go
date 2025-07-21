@@ -4,7 +4,7 @@ import (
 	"container/heap"
 	"sync"
 	
-	"../model"
+	"simulation-engine/pkg/model"
 )
 
 // EventQueue represents a priority queue for simulation events

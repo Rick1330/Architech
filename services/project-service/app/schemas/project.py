@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-import uuid
 
 class ProjectBase(BaseModel):
     name: str
@@ -17,19 +16,19 @@ class ProjectUpdate(BaseModel):
     is_public: Optional[bool] = None
 
 class ProjectInDBBase(ProjectBase):
-    id: uuid.UUID
-    owner_id: uuid.UUID
+    id: str
+    owner_id: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Project(ProjectInDBBase):
     pass
 
 class ProjectCollaboratorBase(BaseModel):
-    user_id: uuid.UUID
+    user_id: str
     role: str = "viewer"
 
 class ProjectCollaboratorCreate(ProjectCollaboratorBase):
@@ -39,12 +38,12 @@ class ProjectCollaboratorUpdate(BaseModel):
     role: Optional[str] = None
 
 class ProjectCollaboratorInDBBase(ProjectCollaboratorBase):
-    id: uuid.UUID
-    project_id: uuid.UUID
+    id: str
+    project_id: str
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProjectCollaborator(ProjectCollaboratorInDBBase):
     pass

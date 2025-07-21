@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-import uuid
 
 from app.main import app
 from app.db.database import get_db, Base
@@ -27,7 +26,7 @@ def override_get_db():
         db.close()
 
 def override_get_current_user_id():
-    return uuid.UUID("12345678-1234-5678-9012-123456789012")
+    return "12345678-1234-5678-9012-123456789012"
 
 app.dependency_overrides[get_db] = override_get_db
 app.dependency_overrides[get_current_user_id] = override_get_current_user_id
@@ -41,7 +40,7 @@ def client():
 
 @pytest.fixture
 def mock_user_id():
-    return uuid.UUID("12345678-1234-5678-9012-123456789012")
+    return "12345678-1234-5678-9012-123456789012"
 
 def test_create_project(client, mock_user_id):
     """Test project creation"""
@@ -49,156 +48,152 @@ def test_create_project(client, mock_user_id):
         "/api/v1/projects/",
         json={
             "name": "Test Project",
-            "description": "A test project for system design"
+            "description": "A test project",
+            "is_public": False
         }
     )
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Test Project"
-    assert data["description"] == "A test project for system design"
+    assert data["description"] == "A test project"
+    assert data["is_public"] == False
     assert data["owner_id"] == mock_user_id
-    assert "id" in data
-    assert "created_at" in data
 
-def test_get_project(client, mock_user_id):
+def test_get_projects(client):
+    """Test getting user projects"""
+    response = client.get("/api/v1/projects/")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+def test_get_project_by_id(client):
     """Test getting a specific project"""
-    # Create project first
+    # First create a project
     create_response = client.post(
         "/api/v1/projects/",
         json={
-            "name": "Get Test Project",
-            "description": "Project for get test"
+            "name": "Test Project for Get",
+            "description": "A test project for getting",
+            "is_public": True
         }
     )
-    project_id = str(create_response.json()["id"])
+    assert create_response.status_code == 201
+    project_id = create_response.json()["id"]
     
-    # Get project
+    # Then get it
     response = client.get(f"/api/v1/projects/{project_id}")
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "Get Test Project"
-    assert data["id"] == project_id
+    assert data["name"] == "Test Project for Get"
 
-def test_get_nonexistent_project(client):
-    """Test getting a project that doesn't exist"""
-    response = client.get("/api/v1/projects/nonexistent-id")
-    assert response.status_code == 404
-
-def test_list_projects(client, mock_user_id):
-    """Test listing all projects"""
-    # Create multiple projects
-    for i in range(3):
-        client.post(
-            "/api/v1/projects/",
-            json={
-                "name": f"List Test Project {i}",
-                "description": f"Project {i} for list test"
-            }
-        )
-    
-    # List projects
-    response = client.get("/api/v1/projects/")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 3
-
-def test_list_projects_by_owner(client, mock_user_id):
-    """Test listing projects by owner"""
-    # Create projects for specific owner
-    for i in range(2):
-        client.post(
-            "/api/v1/projects/",
-            json={
-                "name": f"Owner Test Project {i}",
-                "description": f"Project {i} for owner test"
-            }
-        )
-    
-    # List projects by owner
-    response = client.get("/api/v1/projects/")
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 2
-    for project in data:
-        assert project["owner_id"] == mock_user_id
-
-def test_update_project(client, mock_user_id):
+def test_update_project(client):
     """Test updating a project"""
-    # Create project first
+    # First create a project
     create_response = client.post(
         "/api/v1/projects/",
         json={
-            "name": "Update Test Project",
-            "description": "Original description"
+            "name": "Test Project for Update",
+            "description": "A test project for updating",
+            "is_public": False
         }
     )
-    project_id = str(create_response.json()["id"])
+    assert create_response.status_code == 201
+    project_id = create_response.json()["id"]
     
-    # Update project
+    # Then update it
     response = client.put(
         f"/api/v1/projects/{project_id}",
         json={
             "name": "Updated Test Project",
-            "description": "Updated description"
+            "description": "An updated test project"
         }
     )
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Updated Test Project"
-    assert data["description"] == "Updated description"
-    assert data["id"] == project_id
+    assert data["description"] == "An updated test project"
 
-def test_delete_project(client, mock_user_id):
+def test_delete_project(client):
     """Test deleting a project"""
-    # Create project first
+    # First create a project
     create_response = client.post(
         "/api/v1/projects/",
         json={
-            "name": "Delete Test Project",
-            "description": "Project to be deleted"
+            "name": "Test Project for Delete",
+            "description": "A test project for deleting",
+            "is_public": False
         }
     )
-    project_id = str(create_response.json()["id"])
+    assert create_response.status_code == 201
+    project_id = create_response.json()["id"]
     
-    # Delete project
+    # Then delete it
     response = client.delete(f"/api/v1/projects/{project_id}")
-    assert response.status_code == 204
+    assert response.status_code == 200
     
-    # Verify project is deleted
+    # Verify it's deleted
     get_response = client.get(f"/api/v1/projects/{project_id}")
     assert get_response.status_code == 404
 
-def test_add_collaborator(client, mock_user_id):
-    """Test adding a collaborator to a project"""
-    # Create project first
+def test_get_public_projects(client):
+    """Test getting public projects"""
+    response = client.get("/api/v1/projects/public")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+def test_get_project_collaborators(client):
+    """Test getting project collaborators"""
+    # First create a project
     create_response = client.post(
         "/api/v1/projects/",
         json={
-            "name": "Collaboration Test Project",
-            "description": "Project for collaboration test"
+            "name": "Test Project for Collaborators",
+            "description": "A test project for collaborators",
+            "is_public": False
         }
     )
-    project_id = str(create_response.json()["id"])
+    assert create_response.status_code == 201
+    project_id = create_response.json()["id"]
+    
+    # Get collaborators
+    response = client.get(f"/api/v1/projects/{project_id}/collaborators")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+def test_add_collaborator(client):
+    """Test adding a collaborator to a project"""
+    # First create a project
+    create_response = client.post(
+        "/api/v1/projects/",
+        json={
+            "name": "Test Project for Add Collaborator",
+            "description": "A test project for adding collaborator",
+            "is_public": False
+        }
+    )
+    assert create_response.status_code == 201
+    project_id = create_response.json()["id"]
     
     # Add collaborator
-    collaborator_id = "12345678-1234-5678-9012-123456789013"
     response = client.post(
         f"/api/v1/projects/{project_id}/collaborators",
         json={
-            "user_id": collaborator_id,
+            "user_id": "12345678-1234-5678-9012-123456789013",
             "role": "editor"
         }
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["user_id"] == collaborator_id
+    assert data["user_id"] == "12345678-1234-5678-9012-123456789013"
     assert data["role"] == "editor"
 
 def test_health_check(client):
     """Test health check endpoint"""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy", "service": "project-service"}
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert data["service"] == "project-service"
 

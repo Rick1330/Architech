@@ -10,8 +10,8 @@ type RequestStatus string
 const (
 	RequestPending    RequestStatus = "pending"
 	RequestProcessing RequestStatus = "processing"
-	RequestCompleted  RequestStatus = "completed"
-	RequestFailed     RequestStatus = "failed"
+	RequestComplete   RequestStatus = "completed"
+	RequestFail       RequestStatus = "failed"
 	RequestTimeout    RequestStatus = "timeout"
 )
 
@@ -20,7 +20,7 @@ type RequestType string
 
 const (
 	HTTPRequest     RequestType = "http_request"
-	DatabaseQuery   RequestType = "database_query"
+	DBQuery         RequestType = "database_query"
 	MessageSend     RequestType = "message_send"
 	CacheOperation  RequestType = "cache_operation"
 	FileOperation   RequestType = "file_operation"
@@ -106,12 +106,12 @@ func (r *Request) SetStatus(status RequestStatus) {
 
 // IsCompleted returns true if the request is in a terminal state
 func (r *Request) IsCompleted() bool {
-	return r.Status == RequestCompleted || r.Status == RequestFailed || r.Status == RequestTimeout
+	return r.Status == RequestComplete || r.Status == RequestFail || r.Status == RequestTimeout
 }
 
 // CanRetry returns true if the request can be retried
 func (r *Request) CanRetry() bool {
-	return r.Status == RequestFailed && r.RetryCount < r.MaxRetries
+	return r.Status == RequestFail && r.RetryCount < r.MaxRetries
 }
 
 // IncrementRetry increments the retry count
