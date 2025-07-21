@@ -78,6 +78,7 @@ jobs:
       run: |
         cd services/user-service
         pip install -r requirements.txt
+        pip install httpx # Explicitly install httpx
         pytest tests/ -v --cov=app --cov-report=xml
 
     - name: Test Project Service
