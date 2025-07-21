@@ -12,3 +12,6 @@ redis==5.0.1
 
 httpx
 
+
+pydantic-settings
+
