@@ -26,8 +26,8 @@ async def root():
 
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "design-service"}
+@app.get("/api/v1/health", tags=["health"])
+def health_check():
+    return {"status": "healthy"}
 
 

@@ -19,7 +19,7 @@ def create_design_version(db: Session, design_id: str, version: DesignVersionCre
     db.refresh(db_version)
     return db_version
 
-def get_design_by_id(db: Session, design_id: str) -> Optional[Design]:
+def get_design_by_id(db: Session, design_id: uuid.UUID) -> Optional[Design]:
     """Get design by ID."""
     return db.query(Design).filter(Design.id == design_id).first()
 
@@ -27,13 +27,13 @@ def get_designs_by_project(db: Session, project_id: str, skip: int = 0, limit: i
     """Get designs by project ID."""
     return db.query(Design).filter(Design.project_id == project_id).offset(skip).limit(limit).all()
 
-def create_design(db: Session, design: DesignCreate, created_by: str) -> Design:
+def create_design(db: Session, design: DesignCreate, created_by: uuid.UUID) -> Design:
     """Create a new design."""
     db_design = Design(
         name=design.name,
         description=design.description,
         project_id=design.project_id,
-        design_data=design.design_data,
+        design_data={},  # Default value
         version=1,
     )
     db.add(db_design)
@@ -46,7 +46,7 @@ def create_design(db: Session, design: DesignCreate, created_by: str) -> Design:
         design_id=db_design.id,
         version=DesignVersionCreate(
             version_number=1,
-            design_data=design.design_data,
+            design_data=design.design_data if hasattr(design, 'design_data') and design.design_data else {},
             commit_message="Initial design creation",
             created_by=created_by
         )
@@ -54,17 +54,39 @@ def create_design(db: Session, design: DesignCreate, created_by: str) -> Design:
     
     return db_design
 
-def update_design(db: Session, design_id: str, design: DesignUpdate) -> Optional[Design]:
-    """Update an existing design."""
+def update_design(db: Session, design_id: uuid.UUID, design_update: DesignUpdate, updated_by: uuid.UUID) -> Optional[Design]:
+    """Update a design and create a new version."""
     db_design = db.query(Design).filter(Design.id == design_id).first()
-    if db_design:
-        for key, value in design.dict(exclude_unset=True).items():
-            setattr(db_design, key, value)
-        db.commit()
-        db.refresh(db_design)
+    if not db_design:
+        return None
+
+    # Create a new version before updating
+    latest_version = db.query(DesignVersion).filter(DesignVersion.design_id == design_id).order_by(desc(DesignVersion.version_number)).first()
+    new_version_number = (latest_version.version_number + 1) if latest_version else 1
+
+    create_design_version(
+        db=db,
+        design_id=design_id,
+        version=DesignVersionCreate(
+            version_number=new_version_number,
+            design_data=design_update.design_data if hasattr(design_update, 'design_data') else db_design.design_data,
+            commit_message=f"Version {new_version_number}",
+            created_by=updated_by
+        )
+    )
+
+    # Update the main design record
+    db_design.name = design_update.name
+    db_design.description = design_update.description
+    db_design.version = new_version_number
+    if hasattr(design_update, 'design_data'):
+        db_design.design_data = design_update.design_data
+
+    db.commit()
+    db.refresh(db_design)
     return db_design
 
-def delete_design(db: Session, design_id: str):
+def delete_design(db: Session, design_id: uuid.UUID):
     """Delete a design."""
     db_design = db.query(Design).filter(Design.id == design_id).first()
     if db_design:
