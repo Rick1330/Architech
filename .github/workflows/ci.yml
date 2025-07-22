@@ -77,7 +77,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/user-service
-        pip install fastapi==0.104.1 pydantic-settings==2.2.1
         pip install -r requirements.txt
         pytest tests/ -v --cov=app --cov-report=xml
 
