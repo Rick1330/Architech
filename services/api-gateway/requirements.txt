@@ -3,3 +3,6 @@ uvicorn[standard]==0.24.0
 httpx==0.25.2
 pydantic==2.5.0
 
+
+pydantic-settings==2.2.1
+
