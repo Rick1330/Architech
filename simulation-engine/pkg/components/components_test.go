@@ -357,16 +357,16 @@ func TestComponentMetrics(t *testing.T) {
 	service := NewGenericService("test-service")
 	
 	// Set a metric
-	service.BaseComponent.SetMetric("test_metric", 42)
+	service.SetMetric("test_metric", 42)
 	
 	// Get the metric
-	value := service.BaseComponent.GetMetric("test_metric")
+	value := service.GetMetric("test_metric")
 	if value != 42 {
 		t.Errorf("Expected metric value to be 42, got %v", value)
 	}
 	
 	// Test non-existent metric
-	value = service.BaseComponent.GetMetric("non_existent")
+	value = service.GetMetric("non_existent")
 	if value != nil {
 		t.Errorf("Expected nil for non-existent metric, got %v", value)
 	}
