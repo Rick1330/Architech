@@ -116,6 +116,12 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 	// Simulate operation failure
 	if rand.Float64() < c.FailureRate {
 		// Operation fails
+		key, _ := event.GetDataValue("key")
+		requestID, _ := event.GetDataValue("request_id")
+		key, _ := event.GetDataValue("key")
+		requestID, _ := event.GetDataValue("request_id")
+		key, _ := event.GetDataValue("key")
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("cache_fail_%s_%d", c.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -124,8 +130,8 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "cache_error",
 				"operation":  "read",
-				"key":        func() interface{} { v, _ := event.GetDataValue("key"); return v }(),
-				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
+				"key":        key,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -162,12 +168,15 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			event.Timestamp + c.AccessTime,
 			model.RequestCompleted,
 			c.GetID(),
+			requestID, _ := event.GetDataValue("request_id")
+			requestID, _ := event.GetDataValue("request_id")
+			requestID, _ := event.GetDataValue("request_id")
 			map[string]interface{}{
 				"operation":    "read",
 				"result":       "hit",
 				"key":          keyStr,
 				"access_time":  c.AccessTime,
-				"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
+				"request_id":   requestID,
 			},
 		)
 	} else {
@@ -178,14 +187,12 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			event.Timestamp + c.AccessTime,
 			model.RequestFailed,
 			c.GetID(),
-			map[string]interface{}{
-				"operation":    "read",
-				"result":       "miss",
-				"key":          keyStr,
-				"access_time":  c.AccessTime,
-				"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
-			},
-		)
+			"request_id":   func() interface{} {
+				v, _ := event.GetDataValue("request_id")
+				return v
+			}(),
+		},
+	)
 	}
 	
 	resultEvents = append(resultEvents, resultEvent)
@@ -260,6 +267,7 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 	c.CacheWrites++
 	
 	// Create write success event
+	requestID, _ := event.GetDataValue("request_id")
 	resultEvent := model.NewEvent(
 		fmt.Sprintf("cache_write_%s_%d", c.GetID(), time.Now().UnixNano()),
 		event.Timestamp + c.AccessTime,
@@ -270,7 +278,7 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 			"key":          keyStr,
 			"size":         size,
 			"access_time":  c.AccessTime,
-			"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
+			"request_id":   requestID,
 		},
 	)
 	
