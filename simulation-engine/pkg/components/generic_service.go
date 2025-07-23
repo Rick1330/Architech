@@ -297,3 +297,21 @@ func (gs *GenericService) SetMaxConcurrency(maxConcurrency int) error {
 	return nil
 }
 
+
+
+// GetMetric returns the value of a metric by key
+func (gs *GenericService) GetMetric(key string) interface{} {
+    if gs.BaseComponent == nil {
+        return nil
+    }
+    return gs.BaseComponent.GetMetric(key)
+}
+
+// SetMetric stores a metric value by key
+func (gs *GenericService) SetMetric(key string, value interface{}) {
+    if gs.BaseComponent != nil {
+        gs.BaseComponent.SetMetric(key, value)
+    }
+}
+
+
