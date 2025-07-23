@@ -126,12 +126,11 @@ func (ag *APIGateway) HandleEvent(ctx context.Context, event *model.Event) ([]*m
 // handleAPIRequest processes incoming API requests
 func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	var resultEvents []*model.Event
-
-	reqID, _ := event.GetDataValue("request_id")
 	
 	// Check if gateway can handle more requests
 	if ag.CurrentLoad >= ag.MaxConcurrency {
 		// Gateway is at capacity, reject request
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("gateway_overload_%s_%d", ag.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -139,7 +138,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 			ag.GetID(),
 			map[string]interface{}{
 				"reason":     "gateway_overloaded",
-				"request_id": reqID,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -159,6 +158,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	
 	if !routeExists || !route.IsEnabled {
 		// Route not found or disabled
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_not_found_%s_%d", ag.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -168,7 +168,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "route_not_found",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": reqID,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -179,6 +179,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	// Simulate authentication check (10% chance of auth failure)
 	if rand.Float64() < 0.1 {
 		// Authentication failed
+		requestID, _ := event.GetDataValue("request_id")
 		authFailEvent := model.NewEvent(
 			fmt.Sprintf("auth_fail_%s_%d", ag.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -188,7 +189,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "authentication_failed",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": reqID,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, authFailEvent)
@@ -199,6 +200,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	// Simulate rate limiting (5% chance of hitting rate limit)
 	if rand.Float64() < 0.05 {
 		// Rate limit hit
+		requestID, _ := event.GetDataValue("request_id")
 		rateLimitEvent := model.NewEvent(
 			fmt.Sprintf("rate_limit_%s_%d", ag.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -209,7 +211,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"path":       pathStr,
 				"method":     methodStr,
 				"rate_limit": route.RateLimit,
-				"request_id": reqID,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, rateLimitEvent)
@@ -220,6 +222,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	// Simulate gateway failure
 	if rand.Float64() < ag.FailureRate {
 		// Gateway fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("gateway_fail_%s_%d", ag.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -229,7 +232,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "gateway_error",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": reqID,
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -242,13 +245,14 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 	ag.SetState(model.StateProcessing)
 	
 	// Create routing event
+	requestID, _ := event.GetDataValue("request_id")
 	routedEvent := model.NewEvent(
 		fmt.Sprintf("routed_%s_%d", ag.GetID(), time.Now().UnixNano()),
 		event.Timestamp + ag.RoutingLatency,
 		model.RequestProcessed,
 		route.BackendURL, // Route to backend service
 		map[string]interface{}{
-			"request_id":       reqID,
+			"request_id":       requestID,
 			"path":             pathStr,
 			"method":           methodStr,
 			"backend_url":      route.BackendURL,
@@ -269,10 +273,6 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 // handleRequestCompletion processes request completion
 func (ag *APIGateway) handleRequestCompletion(event *model.Event) []*model.Event {
 	var resultEvents []*model.Event
-
-	reqID, _ := event.GetDataValue("request_id")
-	backendURL, _ := event.GetDataValue("backend_url")
-	routingLatency, _ := event.GetDataValue("routing_latency")
 	
 	// Decrease current load
 	ag.CurrentLoad--
@@ -283,13 +283,16 @@ func (ag *APIGateway) handleRequestCompletion(event *model.Event) []*model.Event
 	}
 	
 	// Create completion event
+	requestID, _ := event.GetDataValue("request_id")
+	backendURL, _ := event.GetDataValue("backend_url")
+	routingLatency, _ := event.GetDataValue("routing_latency")
 	completedEvent := model.NewEvent(
 		fmt.Sprintf("completed_%s_%d", ag.GetID(), time.Now().UnixNano()),
 		event.Timestamp,
 		model.RequestCompleted,
 		ag.GetID(),
 		map[string]interface{}{
-			"request_id":      reqID,
+			"request_id":      requestID,
 			"backend_url":     backendURL,
 			"routing_latency": routingLatency,
 		},
@@ -454,6 +457,4 @@ func (ag *APIGateway) GetRouteStats() map[string]int64 {
 	}
 	return stats
 }
-
-
 
