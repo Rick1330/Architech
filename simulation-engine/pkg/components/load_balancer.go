@@ -139,8 +139,6 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	if len(healthyServers) == 0 {
 		// No healthy servers, fail the request
 		requestID, _ := event.GetDataValue("request_id")
-		requestID, _ := event.GetDataValue("request_id")
-		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -159,6 +157,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	// Simulate routing failure
 	if rand.Float64() < lb.FailureRate {
 		// Routing fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -178,6 +177,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	selectedServer := lb.selectBackendServer(healthyServers)
 	if selectedServer == nil {
 		// No server selected, fail the request
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
