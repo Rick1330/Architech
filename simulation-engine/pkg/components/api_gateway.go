@@ -137,7 +137,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 			ag.GetID(),
 			map[string]interface{}{
 				"reason":     "gateway_overloaded",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -166,7 +166,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "route_not_found",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -186,7 +186,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "authentication_failed",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, authFailEvent)
@@ -207,7 +207,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"path":       pathStr,
 				"method":     methodStr,
 				"rate_limit": route.RateLimit,
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, rateLimitEvent)
@@ -227,7 +227,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 				"reason":     "gateway_error",
 				"path":       pathStr,
 				"method":     methodStr,
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -246,7 +246,7 @@ func (ag *APIGateway) handleAPIRequest(event *model.Event) []*model.Event {
 		model.RequestProcessed,
 		route.BackendURL, // Route to backend service
 		map[string]interface{}{
-			"request_id":       event.GetDataValue("request_id"),
+			"request_id":       func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			"path":             pathStr,
 			"method":           methodStr,
 			"backend_url":      route.BackendURL,
@@ -283,9 +283,9 @@ func (ag *APIGateway) handleRequestCompletion(event *model.Event) []*model.Event
 		model.RequestCompleted,
 		ag.GetID(),
 		map[string]interface{}{
-			"request_id":      event.GetDataValue("request_id"),
-			"backend_url":     event.GetDataValue("backend_url"),
-			"routing_latency": event.GetDataValue("routing_latency"),
+			"request_id":      func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
+			"backend_url":     func() interface{} { v, _ := event.GetDataValue("backend_url"); return v }(),
+			"routing_latency": func() interface{} { v, _ := event.GetDataValue("routing_latency"); return v }(),
 		},
 	)
 	

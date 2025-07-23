@@ -124,8 +124,8 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "cache_error",
 				"operation":  "read",
-				"key":        event.GetDataValue("key"),
-				"request_id": event.GetDataValue("request_id"),
+				"key":        func() interface{} { v, _ := event.GetDataValue("key"); return v }(),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -167,7 +167,7 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 				"result":       "hit",
 				"key":          keyStr,
 				"access_time":  c.AccessTime,
-				"request_id":   event.GetDataValue("request_id"),
+				"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 	} else {
@@ -183,7 +183,7 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 				"result":       "miss",
 				"key":          keyStr,
 				"access_time":  c.AccessTime,
-				"request_id":   event.GetDataValue("request_id"),
+				"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 	}
@@ -209,8 +209,8 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "cache_error",
 				"operation":  "write",
-				"key":        event.GetDataValue("key"),
-				"request_id": event.GetDataValue("request_id"),
+				"key":        func() interface{} { v, _ := event.GetDataValue("key"); return v }(),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -270,7 +270,7 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 			"key":          keyStr,
 			"size":         size,
 			"access_time":  c.AccessTime,
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 		},
 	)
 	

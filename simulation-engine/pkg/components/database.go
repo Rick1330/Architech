@@ -122,7 +122,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "read",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -145,7 +145,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "read",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -168,9 +168,9 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "read",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			"latency":      db.ReadLatency,
-			"data_size":    event.GetDataValue("data_size"),
+			"data_size":    func() interface{} { v, _ := event.GetDataValue("data_size"); return v }(),
 		},
 	)
 	
@@ -200,7 +200,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "write",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -223,7 +223,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "write",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -246,9 +246,9 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "write",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			"latency":      db.WriteLatency,
-			"data_size":    event.GetDataValue("data_size"),
+			"data_size":    func() interface{} { v, _ := event.GetDataValue("data_size"); return v }(),
 		},
 	)
 	
@@ -278,7 +278,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "query",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -301,7 +301,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "query",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -324,10 +324,10 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "query",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   func() interface{} { v, _ := event.GetDataValue("request_id"); return v }(),
 			"latency":      db.QueryLatency,
-			"query_type":   event.GetDataValue("query_type"),
-			"result_size":  event.GetDataValue("result_size"),
+			"query_type":   func() interface{} { v, _ := event.GetDataValue("query_type"); return v }(),
+			"result_size":  func() interface{} { v, _ := event.GetDataValue("result_size"); return v }(),
 		},
 	)
 	
