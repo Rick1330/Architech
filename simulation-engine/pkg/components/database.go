@@ -114,6 +114,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 	// Check if database can handle more connections
 	if db.CurrentConnections >= db.MaxConnections {
 		// Database is at capacity, reject operation
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("read_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -122,7 +123,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "read",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -137,6 +138,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 	// Simulate operation failure
 	if rand.Float64() < db.FailureRate {
 		// Operation fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("read_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp + 0.01, // Fail quickly
@@ -145,7 +147,7 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "read",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -161,6 +163,8 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 	
 	// Schedule read completion
 	completionTime := event.Timestamp + db.ReadLatency
+	requestID, _ := event.GetDataValue("request_id")
+	dataSize, _ := event.GetDataValue("data_size")
 	completionEvent := model.NewEvent(
 		fmt.Sprintf("read_complete_%s_%d", db.GetID(), time.Now().UnixNano()),
 		completionTime,
@@ -168,9 +172,9 @@ func (db *Database) handleDatabaseRead(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "read",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   requestID,
 			"latency":      db.ReadLatency,
-			"data_size":    event.GetDataValue("data_size"),
+			"data_size":    dataSize,
 		},
 	)
 	
@@ -192,6 +196,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 	// Check if database can handle more connections
 	if db.CurrentConnections >= db.MaxConnections {
 		// Database is at capacity, reject operation
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("write_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -200,7 +205,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "write",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -215,6 +220,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 	// Simulate operation failure
 	if rand.Float64() < db.FailureRate {
 		// Operation fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("write_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp + 0.01, // Fail quickly
@@ -223,7 +229,7 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "write",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -239,6 +245,8 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 	
 	// Schedule write completion
 	completionTime := event.Timestamp + db.WriteLatency
+	requestID, _ := event.GetDataValue("request_id")
+	dataSize, _ := event.GetDataValue("data_size")
 	completionEvent := model.NewEvent(
 		fmt.Sprintf("write_complete_%s_%d", db.GetID(), time.Now().UnixNano()),
 		completionTime,
@@ -246,9 +254,9 @@ func (db *Database) handleDatabaseWrite(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "write",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   requestID,
 			"latency":      db.WriteLatency,
-			"data_size":    event.GetDataValue("data_size"),
+			"data_size":    dataSize,
 		},
 	)
 	
@@ -270,6 +278,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 	// Check if database can handle more connections
 	if db.CurrentConnections >= db.MaxConnections {
 		// Database is at capacity, reject operation
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("query_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -278,7 +287,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "connection_limit_exceeded",
 				"operation":  "query",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -293,6 +302,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 	// Simulate operation failure
 	if rand.Float64() < db.FailureRate {
 		// Operation fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("query_fail_%s_%d", db.GetID(), time.Now().UnixNano()),
 			event.Timestamp + 0.01, // Fail quickly
@@ -301,7 +311,7 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "database_error",
 				"operation":  "query",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -317,6 +327,9 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 	
 	// Schedule query completion
 	completionTime := event.Timestamp + db.QueryLatency
+	requestID, _ := event.GetDataValue("request_id")
+	queryType, _ := event.GetDataValue("query_type")
+	resultSize, _ := event.GetDataValue("result_size")
 	completionEvent := model.NewEvent(
 		fmt.Sprintf("query_complete_%s_%d", db.GetID(), time.Now().UnixNano()),
 		completionTime,
@@ -324,10 +337,10 @@ func (db *Database) handleDatabaseQuery(event *model.Event) []*model.Event {
 		db.GetID(),
 		map[string]interface{}{
 			"operation":    "query",
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   requestID,
 			"latency":      db.QueryLatency,
-			"query_type":   event.GetDataValue("query_type"),
-			"result_size":  event.GetDataValue("result_size"),
+			"query_type":   queryType,
+			"result_size":  resultSize,
 		},
 	)
 	

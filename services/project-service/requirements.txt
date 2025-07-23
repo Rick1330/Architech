@@ -5,4 +5,13 @@ psycopg2-binary==2.9.9
 alembic==1.12.1
 pydantic==2.5.0
 httpx==0.25.2
+pydantic-settings==2.2.1
+pytest
+pytest-asyncio
+pytest-cov
+
+
+
+pydantic-settings==2.2.1
+
 

@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"testing"
-	"time"
 	
 	"simulation-engine/pkg/model"
 )

@@ -14,7 +14,7 @@ class DesignCreate(DesignBase):
 class DesignUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    design_data: Optional[Dict[str, Any]] = None
+    design_data: Dict[str, Any] = {}
 
 class DesignInDBBase(DesignBase):
     id: uuid.UUID
@@ -36,7 +36,7 @@ class DesignVersionBase(BaseModel):
     commit_message: Optional[str] = None
 
 class DesignVersionCreate(DesignVersionBase):
-    created_by: uuid.UUID
+    created_by: Optional[uuid.UUID] = None
 
 class DesignVersionInDBBase(DesignVersionBase):
     id: uuid.UUID

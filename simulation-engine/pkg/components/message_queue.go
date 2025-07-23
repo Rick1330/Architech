@@ -94,6 +94,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 	// Check if queue is full
 	if mq.CurrentQueueSize >= mq.MaxQueueSize {
 		// Queue is full, drop message
+		messageID, _ := event.GetDataValue("message_id")
 		dropEvent := model.NewEvent(
 			fmt.Sprintf("drop_%s_%d", mq.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -102,7 +103,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 			map[string]interface{}{
 				"reason":     "queue_full",
 				"operation":  "enqueue",
-				"message_id": event.GetDataValue("message_id"),
+				"message_id": messageID,
 			},
 		)
 		resultEvents = append(resultEvents, dropEvent)
@@ -113,6 +114,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 	// Simulate enqueue failure
 	if rand.Float64() < mq.FailureRate {
 		// Enqueue fails
+		messageID, _ := event.GetDataValue("message_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("enqueue_fail_%s_%d", mq.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -121,7 +123,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 			map[string]interface{}{
 				"reason":     "enqueue_error",
 				"operation":  "enqueue",
-				"message_id": event.GetDataValue("message_id"),
+				"message_id": messageID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -135,6 +137,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 	mq.SetState(model.StateProcessing)
 	
 	// Create enqueue success event
+	messageID, _ := event.GetDataValue("message_id")
 	successEvent := model.NewEvent(
 		fmt.Sprintf("enqueue_success_%s_%d", mq.GetID(), time.Now().UnixNano()),
 		event.Timestamp + mq.ProcessingTime,
@@ -142,7 +145,7 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 		mq.GetID(),
 		map[string]interface{}{
 			"operation":       "enqueue",
-			"message_id":      event.GetDataValue("message_id"),
+			"message_id":      messageID,
 			"queue_size":      mq.CurrentQueueSize,
 			"processing_time": mq.ProcessingTime,
 		},
@@ -153,13 +156,14 @@ func (mq *MessageQueue) handleMessageEnqueue(event *model.Event) []*model.Event 
 	// If queue was empty, it's now ready for dequeue
 	if mq.CurrentQueueSize == 1 {
 		// Schedule automatic dequeue after a short delay
+		messageID, _ := event.GetDataValue("message_id")
 		dequeueEvent := model.NewEvent(
 			fmt.Sprintf("auto_dequeue_%s_%d", mq.GetID(), time.Now().UnixNano()),
 			event.Timestamp + mq.ProcessingTime + 0.01,
 			model.MessageDequeued,
 			mq.GetID(),
 			map[string]interface{}{
-				"message_id": event.GetDataValue("message_id"),
+				"message_id": messageID,
 				"auto":       true,
 			},
 		)
@@ -176,6 +180,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 	// Check if queue is empty
 	if mq.CurrentQueueSize <= 0 {
 		// Queue is empty, cannot dequeue
+		messageID, _ := event.GetDataValue("message_id")
 		emptyEvent := model.NewEvent(
 			fmt.Sprintf("empty_%s_%d", mq.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -184,7 +189,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 			map[string]interface{}{
 				"reason":     "queue_empty",
 				"operation":  "dequeue",
-				"message_id": event.GetDataValue("message_id"),
+				"message_id": messageID,
 			},
 		)
 		resultEvents = append(resultEvents, emptyEvent)
@@ -194,6 +199,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 	// Simulate dequeue failure
 	if rand.Float64() < mq.FailureRate {
 		// Dequeue fails
+		messageID, _ := event.GetDataValue("message_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("dequeue_fail_%s_%d", mq.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -202,7 +208,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 			map[string]interface{}{
 				"reason":     "dequeue_error",
 				"operation":  "dequeue",
-				"message_id": event.GetDataValue("message_id"),
+				"message_id": messageID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -220,6 +226,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 	}
 	
 	// Create dequeue success event
+	messageID, _ := event.GetDataValue("message_id")
 	successEvent := model.NewEvent(
 		fmt.Sprintf("dequeue_success_%s_%d", mq.GetID(), time.Now().UnixNano()),
 		event.Timestamp + mq.ProcessingTime,
@@ -227,7 +234,7 @@ func (mq *MessageQueue) handleMessageDequeue(event *model.Event) []*model.Event 
 		mq.GetID(),
 		map[string]interface{}{
 			"operation":       "dequeue",
-			"message_id":      event.GetDataValue("message_id"),
+			"message_id":      messageID,
 			"queue_size":      mq.CurrentQueueSize,
 			"processing_time": mq.ProcessingTime,
 		},

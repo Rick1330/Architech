@@ -112,6 +112,10 @@ func (c *Cache) HandleEvent(ctx context.Context, event *model.Event) ([]*model.E
 // handleCacheRead processes cache read operations
 func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 	var resultEvents []*model.Event
+	var resultEvent *model.Event // Declare resultEvent here
+
+	key, _ := event.GetDataValue("key")
+	reqID, _ := event.GetDataValue("request_id")
 	
 	// Simulate operation failure
 	if rand.Float64() < c.FailureRate {
@@ -124,8 +128,8 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "cache_error",
 				"operation":  "read",
-				"key":        event.GetDataValue("key"),
-				"request_id": event.GetDataValue("request_id"),
+				"key":        key,
+				"request_id": reqID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -133,7 +137,6 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 		return resultEvents
 	}
 	
-	key, _ := event.GetDataValue("key")
 	keyStr := fmt.Sprintf("%v", key)
 	
 	c.SetState(model.StateProcessing)
@@ -148,11 +151,9 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			entry.Timestamp = event.Timestamp
 		}
 	} else {
-		// Key doesn't exist, definitely a miss
+		// Key doesn\'t exist, definitely a miss
 		isHit = false
 	}
-	
-	var resultEvent *model.Event
 	
 	if isHit {
 		// Cache hit
@@ -167,7 +168,7 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 				"result":       "hit",
 				"key":          keyStr,
 				"access_time":  c.AccessTime,
-				"request_id":   event.GetDataValue("request_id"),
+				"request_id":   reqID,
 			},
 		)
 	} else {
@@ -183,7 +184,7 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 				"result":       "miss",
 				"key":          keyStr,
 				"access_time":  c.AccessTime,
-				"request_id":   event.GetDataValue("request_id"),
+				"request_id":   reqID,
 			},
 		)
 	}
@@ -197,6 +198,10 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 // handleCacheWrite processes cache write operations
 func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 	var resultEvents []*model.Event
+
+	key, _ := event.GetDataValue("key")
+	value, _ := event.GetDataValue("value")
+	reqID, _ := event.GetDataValue("request_id")
 	
 	// Simulate operation failure
 	if rand.Float64() < c.FailureRate {
@@ -209,8 +214,8 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 			map[string]interface{}{
 				"reason":     "cache_error",
 				"operation":  "write",
-				"key":        event.GetDataValue("key"),
-				"request_id": event.GetDataValue("request_id"),
+				"key":        key,
+				"request_id": reqID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -218,9 +223,7 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 		return resultEvents
 	}
 	
-	key, _ := event.GetDataValue("key")
 	keyStr := fmt.Sprintf("%v", key)
-	value, _ := event.GetDataValue("value")
 	size := 1 // Default size
 	if s, exists := event.GetDataValue("size"); exists {
 		if sInt, ok := s.(int); ok {
@@ -270,7 +273,7 @@ func (c *Cache) handleCacheWrite(event *model.Event) []*model.Event {
 			"key":          keyStr,
 			"size":         size,
 			"access_time":  c.AccessTime,
-			"request_id":   event.GetDataValue("request_id"),
+			"request_id":   reqID,
 		},
 	)
 	
@@ -433,4 +436,8 @@ func (c *Cache) GetEntry(key string) (*CacheEntry, bool) {
 	entry, exists := c.Entries[key]
 	return entry, exists
 }
+
+
+
+
 

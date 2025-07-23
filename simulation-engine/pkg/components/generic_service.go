@@ -90,6 +90,7 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 	// Check if service can handle more requests
 	if gs.CurrentLoad >= gs.MaxConcurrency {
 		// Service is at capacity, reject request
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("fail_%s_%d", gs.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -97,7 +98,7 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 			gs.GetID(),
 			map[string]interface{}{
 				"reason":     "service_overloaded",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -112,6 +113,7 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 	// Simulate processing failure
 	if rand.Float64() < gs.FailureRate {
 		// Request fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("fail_%s_%d", gs.GetID(), time.Now().UnixNano()),
 			event.Timestamp + 0.1, // Fail quickly
@@ -119,7 +121,7 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 			gs.GetID(),
 			map[string]interface{}{
 				"reason":     "processing_error",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -135,13 +137,14 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 	
 	// Schedule request completion
 	completionTime := event.Timestamp + gs.ProcessingTime
+	requestID, _ := event.GetDataValue("request_id")
 	completionEvent := model.NewEvent(
 		fmt.Sprintf("complete_%s_%d", gs.GetID(), time.Now().UnixNano()),
 		completionTime,
 		model.RequestProcessed,
 		gs.GetID(),
 		map[string]interface{}{
-			"request_id":      event.GetDataValue("request_id"),
+			"request_id":      requestID,
 			"processing_time": gs.ProcessingTime,
 		},
 	)
@@ -164,14 +167,16 @@ func (gs *GenericService) handleRequestProcessed(event *model.Event) []*model.Ev
 	}
 	
 	// Create completion event
+	requestID, _ := event.GetDataValue("request_id")
+	processingTime, _ := event.GetDataValue("processing_time")
 	completedEvent := model.NewEvent(
 		fmt.Sprintf("completed_%s_%d", gs.GetID(), time.Now().UnixNano()),
 		event.Timestamp,
 		model.RequestCompleted,
 		gs.GetID(),
 		map[string]interface{}{
-			"request_id":      event.GetDataValue("request_id"),
-			"processing_time": event.GetDataValue("processing_time"),
+			"request_id":      requestID,
+			"processing_time": processingTime,
 		},
 	)
 	
@@ -291,4 +296,22 @@ func (gs *GenericService) SetMaxConcurrency(maxConcurrency int) error {
 	gs.MaxConcurrency = maxConcurrency
 	return nil
 }
+
+
+
+// GetMetric returns the value of a metric by key
+func (gs *GenericService) GetMetric(key string) interface{} {
+    if gs.BaseComponent == nil {
+        return nil
+    }
+    return gs.BaseComponent.GetMetric(key)
+}
+
+// SetMetric stores a metric value by key
+func (gs *GenericService) SetMetric(key string, value interface{}) {
+    if gs.BaseComponent != nil {
+        gs.BaseComponent.SetMetric(key, value)
+    }
+}
+
 

@@ -138,6 +138,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	healthyServers := lb.getHealthyServers()
 	if len(healthyServers) == 0 {
 		// No healthy servers, fail the request
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -145,7 +146,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 			lb.GetID(),
 			map[string]interface{}{
 				"reason":     "no_healthy_servers",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -156,6 +157,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	// Simulate routing failure
 	if rand.Float64() < lb.FailureRate {
 		// Routing fails
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -163,7 +165,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 			lb.GetID(),
 			map[string]interface{}{
 				"reason":     "routing_error",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -175,6 +177,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	selectedServer := lb.selectBackendServer(healthyServers)
 	if selectedServer == nil {
 		// No server selected, fail the request
+		requestID, _ := event.GetDataValue("request_id")
 		failEvent := model.NewEvent(
 			fmt.Sprintf("route_fail_%s_%d", lb.GetID(), time.Now().UnixNano()),
 			event.Timestamp,
@@ -182,7 +185,7 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 			lb.GetID(),
 			map[string]interface{}{
 				"reason":     "server_selection_failed",
-				"request_id": event.GetDataValue("request_id"),
+				"request_id": requestID,
 			},
 		)
 		resultEvents = append(resultEvents, failEvent)
@@ -196,13 +199,14 @@ func (lb *LoadBalancer) handleRequestRouting(event *model.Event) []*model.Event 
 	lb.SetState(model.StateProcessing)
 	
 	// Create routing success event
+	requestID, _ := event.GetDataValue("request_id")
 	routedEvent := model.NewEvent(
 		fmt.Sprintf("routed_%s_%d", lb.GetID(), time.Now().UnixNano()),
 		event.Timestamp + lb.RoutingLatency,
 		model.RequestProcessed,
 		selectedServer.ID, // Route to the selected server
 		map[string]interface{}{
-			"request_id":       event.GetDataValue("request_id"),
+			"request_id":       requestID,
 			"backend_server":   selectedServer.ID,
 			"routing_latency":  lb.RoutingLatency,
 			"algorithm":        string(lb.Algorithm),
