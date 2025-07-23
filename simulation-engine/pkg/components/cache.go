@@ -112,6 +112,7 @@ func (c *Cache) HandleEvent(ctx context.Context, event *model.Event) ([]*model.E
 // handleCacheRead processes cache read operations
 func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 	var resultEvents []*model.Event
+	var resultEvent *model.Event // Declare resultEvent here
 
 	key, _ := event.GetDataValue("key")
 	reqID, _ := event.GetDataValue("request_id")
@@ -150,7 +151,7 @@ func (c *Cache) handleCacheRead(event *model.Event) []*model.Event {
 			entry.Timestamp = event.Timestamp
 		}
 	} else {
-		// Key doesn't exist, definitely a miss
+		// Key doesn\'t exist, definitely a miss
 		isHit = false
 	}
 	
@@ -435,6 +436,8 @@ func (c *Cache) GetEntry(key string) (*CacheEntry, bool) {
 	entry, exists := c.Entries[key]
 	return entry, exists
 }
+
+
 
 
 

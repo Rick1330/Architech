@@ -192,3 +192,12 @@ type ComponentFactory interface {
 	GetSupportedTypes() []ComponentType
 }
 
+
+// GetMetric returns the value of a metric by key
+func (bc *BaseComponent) GetMetric(key string) interface{} {
+	if bc.Metrics == nil {
+		return nil
+	}
+	return bc.Metrics[key]
+}
+
