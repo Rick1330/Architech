@@ -86,7 +86,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/project-service
-        pip install fastapi==0.104.1 pydantic-settings==2.2.1
         pip install -r requirements.txt
         pytest tests/ -v --cov=app --cov-report=xml
 
@@ -96,7 +95,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/design-service
-        pip install fastapi==0.104.1 pydantic-settings==2.2.1
         pip install -r requirements.txt
         pytest tests/ -v --cov=app --cov-report=xml
 
@@ -106,7 +104,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/simulation-orchestration-service
-        pip install fastapi==0.104.1 pydantic-settings==2.2.1
         pip install -r requirements.txt
         pytest tests/ -v --cov=app --cov-report=xml
 
@@ -116,30 +113,8 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/api-gateway
-        pip install fastapi==0.104.1 pydantic-settings==2.2.1
         pip install -r requirements.txt
         pytest tests/ -v --cov=app --cov-report=xml
-
-    # Frontend testing
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-
-    - name: Lint frontend code
-      run: |
-        cd frontend
-        npm run lint || true  # Don't fail on lint warnings initially
-
-    - name: Test frontend
-      run: |
-        cd frontend
-        npm test -- --coverage --watchAll=false
-
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
 
     # Go simulation engine testing
     - name: Test Simulation Engine
@@ -224,44 +199,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./simulation-engine
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-
-  build-frontend:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

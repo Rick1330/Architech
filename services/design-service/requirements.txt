@@ -11,3 +11,7 @@ pytest-asyncio
 pytest-cov
 
 
+
+pydantic-settings==2.2.1
+
+
