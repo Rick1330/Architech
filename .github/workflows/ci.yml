@@ -126,8 +126,8 @@ jobs:
     # Frontend testing
     - name: Test Frontend
       run: |
-        if [ -d "frontend_new" ]; then
-          cd frontend_new
+        if [ -d "frontend" ]; then
+          cd frontend
           npm ci
           npm run build
           # Add frontend tests when available

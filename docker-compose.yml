@@ -143,26 +143,7 @@ services:
     volumes:
       - ./simulation-engine:/app
 
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    environment:
-      REACT_APP_API_BASE_URL: http://localhost:8000
-    ports:
-      - "3000:3000"
-    depends_on:
-      - user-service
-      - project-service
-      - design-service
-      - simulation-orchestration-service
-    networks:
-      - architech-network
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm start
+
 
   # API Gateway
   api-gateway:
@@ -187,10 +168,28 @@ services:
       - ./services/api-gateway:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_GATEWAY_URL: http://api-gateway:8000/api/v1
+      NEXT_PUBLIC_SIMULATION_WS_URL: ws://api-gateway:8000/ws/simulations
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - architech-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
 volumes:
   postgres_data:
 
 networks:
   architech-network:
     driver: bridge
-
