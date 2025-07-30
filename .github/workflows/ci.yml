@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration ]
 
 env:
   REGISTRY: ghcr.io
@@ -123,10 +123,21 @@ jobs:
         go mod tidy
         go test -v ./...
 
+    # Frontend testing
+    - name: Test Frontend
+      run: |
+        if [ -d "frontend_new" ]; then
+          cd frontend_new
+          npm ci
+          npm run build
+          # Add frontend tests when available
+          # npm test
+        fi
+
   build-and-push:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine' || github.ref == 'refs/heads/feature/phase4-frontend-integration')
     
     permissions:
       contents: read
@@ -168,7 +179,7 @@ jobs:
   build-simulation-engine:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine' || github.ref == 'refs/heads/feature/phase4-frontend-integration')
     
     permissions:
       contents: read
