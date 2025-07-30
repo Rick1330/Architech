@@ -12,22 +12,14 @@ CREATE DATABASE IF NOT EXISTS architech_observability;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create a common user for all services (in production, each service should have its own user)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'architech_service') THEN
-        CREATE ROLE architech_service WITH LOGIN PASSWORD 'service_password';
-    END IF;
-END
-$$;
-
--- Grant necessary permissions
-GRANT ALL PRIVILEGES ON DATABASE architech TO architech_service;
-GRANT ALL PRIVILEGES ON DATABASE architech_users TO architech_service;
-GRANT ALL PRIVILEGES ON DATABASE architech_projects TO architech_service;
-GRANT ALL PRIVILEGES ON DATABASE architech_designs TO architech_service;
-GRANT ALL PRIVILEGES ON DATABASE architech_simulations TO architech_service;
-GRANT ALL PRIVILEGES ON DATABASE architech_observability TO architech_service;
+-- The main user 'architech' is already created by docker-compose.yml
+-- Grant necessary permissions to the architech user
+GRANT ALL PRIVILEGES ON DATABASE architech TO architech;
+GRANT ALL PRIVILEGES ON DATABASE architech_users TO architech;
+GRANT ALL PRIVILEGES ON DATABASE architech_projects TO architech;
+GRANT ALL PRIVILEGES ON DATABASE architech_designs TO architech;
+GRANT ALL PRIVILEGES ON DATABASE architech_simulations TO architech;
+GRANT ALL PRIVILEGES ON DATABASE architech_observability TO architech;
 
 -- Create initial schema structure (will be managed by individual services via migrations)
 \c architech;
