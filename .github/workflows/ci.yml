@@ -52,11 +52,10 @@ jobs:
 
     - name: Set up Node.js      - uses: actions/setup-node@v4
         with:
-          node-version: '20' - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-
+          node-version: '2    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
     # Python services linting and testing
     - name: Install Python base dependencies
       run: |
@@ -213,5 +212,32 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
 
 
+
+
+
+
+    - name: Start Docker Compose Services
+      run: |
+        sudo docker compose up -d
+
+    - name: Wait for services to be healthy
+      run: |
+        sudo docker compose ps
+        # Add health checks for services if needed
+        # Example: docker compose logs --follow service_name | grep -q "Service healthy"
+        sleep 60 # Give services time to start
+
+
+
+
+    - name: Run Integration Tests
+      run: |
+        echo "Running integration tests... (Placeholder)"
+        # Command to run integration tests here
+
+    - name: Run E2E Tests
+      run: |
+        echo "Running E2E tests... (Placeholder)"
+        # Command to run E2E tests here
 
 
