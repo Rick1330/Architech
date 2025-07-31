@@ -1,4 +1,3 @@
-import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { cn, getComponentColor } from '@/lib/utils';
 import { PALETTE_COMPONENTS } from '@/lib/data';
