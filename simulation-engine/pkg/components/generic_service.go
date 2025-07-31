@@ -72,6 +72,8 @@ func (gs *GenericService) HandleEvent(ctx context.Context, event *model.Event) (
 		resultEvents = gs.handleRequestArrival(event)
 	case model.RequestProcessed:
 		resultEvents = gs.handleRequestProcessed(event)
+	case model.RequestFailed:
+		resultEvents = gs.handleRequestFailed(event)
 	default:
 		// Unknown event type, ignore
 		return nil, nil
@@ -126,7 +128,6 @@ func (gs *GenericService) handleRequestArrival(event *model.Event) []*model.Even
 		)
 		resultEvents = append(resultEvents, failEvent)
 		gs.RequestsFailed++
-		gs.CurrentLoad--
 		
 		if gs.CurrentLoad == 0 {
 			gs.SetState(model.StateIdle)
@@ -182,6 +183,19 @@ func (gs *GenericService) handleRequestProcessed(event *model.Event) []*model.Ev
 	
 	resultEvents = append(resultEvents, completedEvent)
 	return resultEvents
+}
+
+// handleRequestFailed processes request failure
+func (gs *GenericService) handleRequestFailed(event *model.Event) []*model.Event {
+	// Decrease current load
+	gs.CurrentLoad--
+
+	// Update state
+	if gs.CurrentLoad == 0 {
+		gs.SetState(model.StateIdle)
+	}
+
+	return nil
 }
 
 // updateMetrics updates component metrics
