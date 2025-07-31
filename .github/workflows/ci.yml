@@ -127,6 +127,7 @@ jobs:
       run: |
         if [ -d "frontend" ]; then
           cd frontend
+          npm cache clean --force
           rm -rf node_modules
           npm ci
           npm run test
