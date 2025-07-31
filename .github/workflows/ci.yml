@@ -19,7 +19,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_DB: architech_test
-          POSTGRES_USER: postgres
+          POSTGRES_USER: github
           POSTGRES_PASSWORD: test_password
         options: >-
           --health-cmd pg_isready
@@ -72,7 +72,7 @@ jobs:
 
     - name: Test User Service
       env:
-        DATABASE_URL: postgresql://postgres:test_password@localhost:5432/architech_test
+        DATABASE_URL: postgresql://github:test_password@localhost:5432/architech_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/user-service
@@ -81,7 +81,7 @@ jobs:
 
     - name: Test Project Service
       env:
-        DATABASE_URL: postgresql://postgres:test_password@localhost:5432/architech_test
+        DATABASE_URL: postgresql://github:test_password@localhost:5432/architech_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/project-service
@@ -90,7 +90,7 @@ jobs:
 
     - name: Test Design Service
       env:
-        DATABASE_URL: postgresql://postgres:test_password@localhost:5432/architech_test
+        DATABASE_URL: postgresql://github:test_password@localhost:5432/architech_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/design-service
@@ -99,7 +99,7 @@ jobs:
 
     - name: Test Simulation Orchestration Service
       env:
-        DATABASE_URL: postgresql://postgres:test_password@localhost:5432/architech_test
+        DATABASE_URL: postgresql://github:test_password@localhost:5432/architech_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/simulation-orchestration-service
@@ -108,7 +108,7 @@ jobs:
 
     - name: Test API Gateway
       env:
-        DATABASE_URL: postgresql://postgres:test_password@localhost:5432/architech_test
+        DATABASE_URL: postgresql://github:test_password@localhost:5432/architech_test
         REDIS_URL: redis://localhost:6379/0
       run: |
         cd services/api-gateway
