@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration, fix-ci-failures ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/phase4-frontend-integration, fix-ci-failures ]
 
 env:
   REGISTRY: ghcr.io
