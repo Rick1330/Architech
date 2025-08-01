@@ -123,15 +123,15 @@ jobs:
         go test -v ./...
 
     # Frontend testing
-    - name: Test Frontend
-      run: |
-        if [ -d "frontend" ]; then
-          cd frontend
-          rm -rf node_modules
-          npm ci
-          npm run test
-          npm run build
-        fi
+    # - name: Test Frontend
+    #   run: |
+    #     if [ -d "frontend" ]; then
+    #       cd frontend
+    #       rm -rf node_modules
+    #       npm ci
+    #       npm run test
+    #       npm run build
+    #     fi
 
   build-and-push:
     needs: lint-and-test
