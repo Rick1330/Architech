@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
 
 env:
   REGISTRY: ghcr.io
@@ -126,7 +126,6 @@ jobs:
   build-and-push:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
     
     permissions:
       contents: read
@@ -155,7 +154,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-
+          type=sha,prefix=sha-
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -168,7 +167,6 @@ jobs:
   build-simulation-engine:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
     
     permissions:
       contents: read
@@ -193,7 +191,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-
+          type=sha,prefix=sha-
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
