@@ -126,7 +126,6 @@ jobs:
   build-and-push:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
     
     permissions:
       contents: read
@@ -168,7 +167,6 @@ jobs:
   build-simulation-engine:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
     
     permissions:
       contents: read
