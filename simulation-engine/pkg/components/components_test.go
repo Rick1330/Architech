@@ -192,6 +192,7 @@ func TestComponentFactory(t *testing.T) {
 
 func TestGenericServiceEventHandling(t *testing.T) {
 	service := NewGenericService("test-service")
+	service.FailureRate = 0.0 // Ensure deterministic behavior for this test
 	ctx := context.Background()
 	
 	// Start the service
