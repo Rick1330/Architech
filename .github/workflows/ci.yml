@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine, fix/run-build-jobs-on-pr ]
+    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine, fix/run-build-jobs-on-pr ]
+    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
 
 env:
   REGISTRY: ghcr.io
@@ -154,7 +154,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-
+          type=sha,prefix=sha-
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -191,7 +191,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-
+          type=sha,prefix=sha-
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
