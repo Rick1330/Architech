@@ -24,28 +24,28 @@ services:
       - architech-network
 
   # Message Queue
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
-    networks:
-      - architech-network
+  # kafka:
+  #   image: confluentinc/cp-kafka:latest
+  #   environment:
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   ports:
+  #     - "9092:9092"
+  #   depends_on:
+  #     - zookeeper
+  #   networks:
+  #     - architech-network
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-    networks:
-      - architech-network
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:latest
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - "2181:2181"
+  #   networks:
+  #     - architech-network
 
   # Backend Services
   user-service:
@@ -103,42 +103,45 @@ services:
       - ./services/design-service:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  simulation-orchestration-service:
-    build:
-      context: ./services/simulation-orchestration-service
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
-      DESIGN_SERVICE_URL: http://design-service:8000
-      SIMULATION_ENGINE_URL: http://simulation-engine:8080
-    ports:
-      - "8004:8000"
-    depends_on:
-      - postgres
-      - design-service
-    networks:
-      - architech-network
-    volumes:
-      - ./services/simulation-orchestration-service:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+  # simulation-orchestration-service:
+  #   build:
+  #     context: ./services/simulation-orchestration-service
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+  #     DESIGN_SERVICE_URL: http://design-service:8000
+  #     SIMULATION_ENGINE_URL: http://simulation-engine:8080
+  #     REDIS_URL: redis://redis:6379
+  #   ports:
+  #     - "8004:8000"
+  #   depends_on:
+  #     - postgres
+  #     - design-service
+  #     - redis
+  #     - simulation-engine
+  #   networks:
+  #     - architech-network
+  #   volumes:
+  #     - ./services/simulation-orchestration-service:/app
+  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Simulation Engine (Go service)
-  simulation-engine:
-    build:
-      context: ./simulation-engine
-      dockerfile: Dockerfile
-    environment:
-      KAFKA_BROKERS: kafka:9092
-      REDIS_URL: redis:6379
-    ports:
-      - "8080:8080"
-    depends_on:
-      - kafka
-      - redis
-    networks:
-      - architech-network
-    volumes:
-      - ./simulation-engine:/app
+  # simulation-engine:
+  #   build:
+  #     context: ./simulation-engine
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     KAFKA_BROKERS: kafka:9092
+  #     REDIS_URL: redis:6379
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - kafka
+  #     - redis
+  #   networks:
+  #     - architech-network
+  #   volumes:
+  #     - ./simulation-engine:/app
 
   # Frontend
   frontend:
@@ -153,7 +156,7 @@ services:
       - user-service
       - project-service
       - design-service
-      - simulation-orchestration-service
+      # - simulation-orchestration-service
     networks:
       - architech-network
     volumes:
@@ -170,14 +173,14 @@ services:
       USER_SERVICE_URL: http://user-service:8000
       PROJECT_SERVICE_URL: http://project-service:8000
       DESIGN_SERVICE_URL: http://design-service:8000
-      SIMULATION_SERVICE_URL: http://simulation-orchestration-service:8000
+      # SIMULATION_SERVICE_URL: http://simulation-orchestration-service:8000
     ports:
       - "8000:8000"
     depends_on:
       - user-service
       - project-service
       - design-service
-      - simulation-orchestration-service
+      # - simulation-orchestration-service
     networks:
       - architech-network
     volumes:

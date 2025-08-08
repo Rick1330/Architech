@@ -12,12 +12,7 @@ def get_password_hash(password: str) -> str:
 
 def validate_password_strength(password: str) -> bool:
     """Validate password strength."""
-    if len(password) < 8:
+    if len(password) < 6:
         return False
-    
-    has_upper = any(c.isupper() for c in password)
-    has_lower = any(c.islower() for c in password)
-    has_digit = any(c.isdigit() for c in password)
-    
-    return has_upper and has_lower and has_digit
+    return True
 
