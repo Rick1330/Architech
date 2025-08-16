@@ -1,0 +1,20 @@
+{
+  "name": "architech-dev-server",
+  "version": "1.0.0",
+  "description": "Development server for Architech frontend integration",
+  "main": "dev-server.js",
+  "scripts": {
+    "dev-server": "node dev-server.js",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev-server\" \"npm run frontend\"",
+    "install-deps": "npm install && cd frontend && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
