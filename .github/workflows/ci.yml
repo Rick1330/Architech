@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/frontend-evaluation-and-integration ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine ]
+    branches: [ main, develop, feature/phase3-simulation-engine, feature/frontend-evaluation-and-integration ]
 
 env:
   REGISTRY: ghcr.io
@@ -126,7 +126,7 @@ jobs:
   build-and-push:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine' || github.ref == 'refs/heads/feature/frontend-evaluation-and-integration')
     
     permissions:
       contents: read
@@ -168,7 +168,7 @@ jobs:
   build-simulation-engine:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/feature/phase3-simulation-engine' || github.ref == 'refs/heads/feature/frontend-evaluation-and-integration')
     
     permissions:
       contents: read
