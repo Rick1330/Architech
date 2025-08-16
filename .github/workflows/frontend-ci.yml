@@ -3,7 +3,7 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: [ main, fix/ci-test-script, front-end-evaluation-and-integration ]
+    branches: [ main, fix/ci-test-script, feature/frontend-evaluation-and-integration ]
     paths:
       - 'frontend/src/**'
       - 'frontend/public/**'
@@ -14,7 +14,7 @@ on:
       - 'frontend/Dockerfile'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [ main, front-end-evaluation-and-integration ]
+    branches: [ main, feature/frontend-evaluation-and-integration ]
     paths:
       - 'frontend/src/**'
       - 'frontend/public/**'
