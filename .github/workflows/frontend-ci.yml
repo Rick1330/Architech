@@ -40,6 +40,9 @@ jobs:
     - name: Run linting
       run: npm run lint
 
+    - name: List lib directory
+      run: ls -R src/lib
+
     - name: Run tests
       run: npm run test
 
