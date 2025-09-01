@@ -38,6 +38,7 @@ venv.bak/
 *.swp
 *.swo
 *~
+.qoder/
 
 # OS
 .DS_Store
@@ -110,4 +111,16 @@ coverage.xml
 # Alembic
 alembic/versions/*.py
 !alembic/versions/README
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test coverage and artifacts
+coverage/
+.nyc_output/
+junit.xml
+
+# Patch-package postinstall artifacts
+.pnp
+.pnp.js
 
