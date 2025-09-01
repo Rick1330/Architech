@@ -73,6 +73,7 @@ yarn-error.log*
 /frontend/.env.development.local
 /frontend/.env.test.local
 /frontend/.env.production.local
+/frontend/.env
 
 # Go
 *.exe
@@ -89,6 +90,7 @@ go.work
 *.temp
 
 # Environment variables
+.env
 .env.local
 .env.development
 .env.test

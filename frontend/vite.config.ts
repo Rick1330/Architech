@@ -11,6 +11,28 @@ export default defineConfig(({ mode }) => ({
     port: 12000,
     cors: true,
     allowedHosts: ['*'],
+    proxy: {
+      // Proxy API requests to the backend
+      '/api': {
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      },
+      // Proxy WebSocket connections
+      '/ws': {
+        target: process.env.VITE_WS_URL || 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true
+      },
+      // Proxy simulation engine requests
+      '/simulation': {
+        target: process.env.VITE_SIMULATION_ENGINE_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/simulation/, '')
+      }
+    }
   },
   plugins: [
     react(),

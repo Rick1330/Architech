@@ -1,0 +1,59 @@
+version: '3.8'
+
+# Production security override for docker-compose.yml
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.security.yml up
+
+services:
+  postgres:
+    # Production PostgreSQL with security enhancements
+    environment:
+      # Require SSL connections
+      POSTGRES_SSL_MODE: require
+      # Enable connection logging for security auditing
+      POSTGRES_LOG_CONNECTIONS: "on"
+      POSTGRES_LOG_DISCONNECTIONS: "on"
+      POSTGRES_LOG_STATEMENT: "all"
+    command: >
+      postgres
+      -c ssl=on
+      -c log_statement=all
+      -c log_connections=on
+      -c log_disconnections=on
+      -c max_connections=100
+      -c shared_preload_libraries=pg_stat_statements
+    # Remove development volume mount for security
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Remove init.sql mount in production
+
+  # Remove development volume mounts from all services
+  user-service:
+    volumes: []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  project-service:
+    volumes: []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  design-service:
+    volumes: []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  simulation-orchestration-service:
+    volumes: []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  simulation-engine:
+    volumes: []
+
+  frontend:
+    environment:
+      NODE_ENV: production
+      VITE_DEV_MODE: false
+      VITE_DEBUG_MODE: false
+    volumes: []
+    command: npm run build && npm run preview
+
+  api-gateway:
+    volumes: []
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000

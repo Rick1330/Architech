@@ -14,6 +14,8 @@ Architech is a powerful platform for designing, simulating, and analyzing distri
 
 ## Getting Started (Local Development)
 
+**🔒 SECURITY FIRST: Set up environment variables before running services!**
+
 To set up the project for local development, follow these steps:
 
 1.  **Clone the repository:**
@@ -22,17 +24,36 @@ To set up the project for local development, follow these steps:
     cd architech
     ```
 
-2.  **Set up Docker Compose:**
+2.  **⚠️ CRITICAL: Set up secure environment variables:**
+    ```bash
+    # Quick setup with auto-generated secrets (recommended)
+    ./setup-env.sh    # Linux/Mac
+    setup-env.bat     # Windows
+    
+    # OR manual setup
+    cp .env.example .env
+    # Edit .env and change ALL default passwords and secrets!
+    ```
+    
+    **📖 Read [SECURITY_SETUP.md](./SECURITY_SETUP.md) for detailed security instructions.**
+
+3.  **Set up frontend environment:**
+    ```bash
+    cd frontend
+    cp .env.example .env.local
+    ```
+
+4.  **Set up Docker Compose:**
     Ensure Docker Desktop (or Docker Engine) is installed and running on your system. The `docker-compose.yml` file in the root directory defines the local development environment.
 
-3.  **Build and run services:**
+5.  **Build and run services:**
     ```bash
     docker-compose up --build
     ```
     This command will build the Docker images for all services and start them, along with their dependencies (e.g., PostgreSQL, Redis, Kafka).
 
-4.  **Access the application:**
-    Once all services are up and running, the frontend application will typically be accessible at `http://localhost:3000` (or another port specified in the `docker-compose.yml`).
+6.  **Access the application:**
+    Once all services are up and running, the frontend application will be accessible at `http://localhost:3000`.
 
 ## Contributing
 

@@ -11,10 +11,31 @@ app = FastAPI(
 # Set up CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://localhost:12000", # Vite dev server
+        "http://frontend:3000",   # Docker container
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:12000",
+        "*"  # Allow all origins for development - restrict in production
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=[
+        "*",
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "User-Agent",
+        "DNT",
+        "Cache-Control",
+        "X-Mx-ReqToken",
+        "Keep-Alive",
+        "X-Requested-With",
+        "If-Modified-Since",
+        "X-CSRFToken"
+    ],
 )
 
 app.include_router(gateway.router, prefix=settings.API_V1_STR)
