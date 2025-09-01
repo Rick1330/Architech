@@ -59,6 +59,23 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
+        cache-dependency-path: simulation-engine/go.sum
+
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        until pg_isready -h localhost -p 5432 -U test_user; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+
+    - name: Test PostgreSQL connection
+      run: |
+        PGPASSWORD=test_password psql -h localhost -U test_user -d architech_test -c "SELECT 1"
+
+    - name: Check PostgreSQL logs
+      run: |
+        docker ps
+        docker logs $(docker ps -q --filter "ancestor=postgres:15")
 
     # Python services linting and testing
     - name: Install Python base dependencies
@@ -127,7 +144,7 @@ jobs:
     - name: Install Frontend Dependencies
       run: |
         cd frontend
-        npm install
+        npm ci
 
     - name: Lint Frontend Code
       run: |
