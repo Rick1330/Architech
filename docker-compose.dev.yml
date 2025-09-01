@@ -1,0 +1,59 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # Frontend with development optimizations
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development  # If multi-stage build exists
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_API_GATEWAY_URL=http://localhost:8000/api/v1
+      - VITE_WS_URL=ws://localhost:8000/ws
+      - VITE_SIMULATION_ENGINE_URL=http://localhost:8080
+      - VITE_DEV_MODE=true
+      - VITE_DEBUG_MODE=true
+    ports:
+      - "12000:12000"  # Vite dev server port
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.vite  # Vite cache directory
+    command: npm run dev
+    depends_on:
+      - api-gateway
+      - simulation-engine
+    networks:
+      - architech-network
+    stdin_open: true
+    tty: true
+
+  # API Gateway with enhanced logging for development
+  api-gateway:
+    environment:
+      - FASTAPI_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./services/api-gateway:/app
+
+  # Enhanced development database with query logging
+  postgres:
+    environment:
+      - POSTGRES_LOG_STATEMENT=all
+      - POSTGRES_LOG_MIN_DURATION_STATEMENT=0
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_min_duration_statement=0
+      -c log_connections=on
+      -c log_disconnections=on
+
+networks:
+  architech-network:
+    driver: bridge

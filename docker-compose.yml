@@ -5,9 +5,9 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: architech
-      POSTGRES_USER: architech
-      POSTGRES_PASSWORD: architech_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -53,9 +53,9 @@ services:
       context: ./services/user-service
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-jwt-secret-key
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8001:8000"
     depends_on:
@@ -72,7 +72,7 @@ services:
       context: ./services/project-service
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       USER_SERVICE_URL: http://user-service:8000
     ports:
       - "8002:8000"
@@ -90,7 +90,7 @@ services:
       context: ./services/design-service
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PROJECT_SERVICE_URL: http://project-service:8000
     ports:
       - "8003:8000"
@@ -108,14 +108,17 @@ services:
       context: ./services/simulation-orchestration-service
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://architech:architech_password@postgres:5432/architech
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       DESIGN_SERVICE_URL: http://design-service:8000
       SIMULATION_ENGINE_URL: http://simulation-engine:8080
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
       - "8004:8000"
     depends_on:
       - postgres
       - design-service
+      - redis
+      - simulation-engine
     networks:
       - architech-network
     volumes:
@@ -128,8 +131,8 @@ services:
       context: ./simulation-engine
       dockerfile: Dockerfile
     environment:
-      KAFKA_BROKERS: kafka:9092
-      REDIS_URL: redis:6379
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
+      REDIS_URL: ${REDIS_URL:-redis:6379}
     ports:
       - "8080:8080"
     depends_on:
@@ -146,20 +149,23 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      REACT_APP_API_BASE_URL: http://localhost:8000
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_API_GATEWAY_URL: http://localhost:8000/api/v1
+      VITE_WS_URL: ws://localhost:8000/ws
+      VITE_SIMULATION_ENGINE_URL: http://localhost:8080
+      VITE_DEV_MODE: true
+      VITE_DEBUG_MODE: false
     ports:
       - "3000:3000"
     depends_on:
-      - user-service
-      - project-service
-      - design-service
-      - simulation-orchestration-service
+      - api-gateway
+      - simulation-engine
     networks:
       - architech-network
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: npm start
+    command: npm run dev
 
   # API Gateway
   api-gateway:
