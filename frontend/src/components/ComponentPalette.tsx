@@ -130,11 +130,17 @@ export const ComponentPalette = () => {
           {filteredComponents.map((component) => {
             const IconComponent = component.icon;
             return (
-              <div
+              <button
                 key={component.id}
-                className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 cursor-grab active:cursor-grabbing transition-colors group"
+                className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 cursor-grab active:cursor-grabbing transition-colors group w-full text-left"
                 draggable
                 onDragStart={(event) => onDragStart(event, component.nodeType)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    // Handle component selection
+                  }
+                }}
               >
                 <div className="flex items-start gap-3">
                   <div 
@@ -154,7 +160,7 @@ export const ComponentPalette = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
 

@@ -17,14 +17,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().min(1, 'Email is required').regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email address'),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
+  email: z.string().min(1, 'Email is required').regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email address'),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -62,7 +62,7 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
       onOpenChange(false);
       loginForm.reset();
     } catch (error) {
-      // Error is handled by the useAuth hook
+      console.error('Login error:', error);
     }
   };
 
@@ -76,7 +76,7 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
       onOpenChange(false);
       registerForm.reset();
     } catch (error) {
-      // Error is handled by the useAuth hook
+      console.error('Registration error:', error);
     }
   };
 

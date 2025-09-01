@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
+    branches: [ main, develop, feature/*, fix/* ]
   pull_request:
-    branches: [ main, develop, feature/phase3-simulation-engine, fix/docker-tagging-issue ]
+    branches: [ main, develop ]
 
 env:
   REGISTRY: ghcr.io
@@ -123,6 +123,27 @@ jobs:
         go mod tidy
         go test -v ./...
 
+    # Frontend testing
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm install
+
+    - name: Lint Frontend Code
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Test Frontend
+      run: |
+        cd frontend
+        npm run test -- --run
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
   build-and-push:
     needs: lint-and-test
     runs-on: ubuntu-latest
@@ -197,6 +218,43 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./simulation-engine
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  build-frontend:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix=sha-
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}

@@ -149,14 +149,20 @@ export const ProjectSwitcher = () => {
               </div>
             ) : (
               filteredProjects.map((project) => (
-                <div
+                <button
                   key={project.id}
-                  className={`p-4 rounded-lg border transition-all cursor-pointer hover:border-primary/50 hover:bg-muted/30 ${
+                  className={`p-4 rounded-lg border transition-all cursor-pointer hover:border-primary/50 hover:bg-muted/30 w-full text-left ${
                     currentProject?.id === project.id 
                       ? 'border-primary bg-primary/10' 
                       : 'border-border'
                   }`}
                   onClick={() => handleLoadProject(project.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleLoadProject(project.id);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -193,7 +199,7 @@ export const ProjectSwitcher = () => {
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>

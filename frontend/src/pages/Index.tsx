@@ -1,7 +1,6 @@
 import { AppHeader } from '@/components/AppHeader';
 import { ComponentPalette } from '@/components/ComponentPalette';
 import { ArchitectCanvas } from '@/components/ArchitectCanvas';
-import { PropertyPanel } from '@/components/PropertyPanel';
 import { EnhancedPropertyPanel } from '@/components/EnhancedPropertyPanel';
 import { SimulationTimeline } from '@/components/SimulationTimeline';
 import { useArchitectStore } from '@/stores/useArchitectStore';

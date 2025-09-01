@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 
 interface ComponentCardProps {
@@ -25,16 +24,21 @@ interface ComponentCardProps {
 
 export const ComponentCard = ({ component, onDragStart, isFavorite, onToggleFavorite }: ComponentCardProps) => {
   const getComponentIcon = (iconName: string, color: string) => {
-    const iconProps = { className: "h-4 w-4", style: { color } };
     // Return basic icon for now
     return <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />;
   };
 
   return (
-    <div
+    <button
       draggable
       onDragStart={(e) => onDragStart(e, component)}
-      className="p-3 border border-border rounded-lg cursor-move hover:border-primary/50 hover:bg-muted/30 transition-all duration-200 group"
+      className="p-3 border border-border rounded-lg cursor-move hover:border-primary/50 hover:bg-muted/30 transition-all duration-200 group w-full text-left bg-background"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          // Handle keyboard interaction for drag start
+        }
+      }}
     >
       <div className="flex items-start gap-3">
         <div 
@@ -46,17 +50,23 @@ export const ComponentCard = ({ component, onDragStart, isFavorite, onToggleFavo
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-medium text-sm">{component.name}</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+            <button
+              type="button"
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center hover:bg-muted rounded-sm transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(component.id);
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleFavorite(component.id);
+                }
+              }}
             >
               <Star className={`h-3 w-3 ${isFavorite ? 'fill-amber-500 text-amber-500' : ''}`} />
-            </Button>
+            </button>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
             {component.description}
@@ -66,6 +76,6 @@ export const ComponentCard = ({ component, onDragStart, isFavorite, onToggleFavo
           </Badge>
         </div>
       </div>
-    </div>
+    </button>
   );
 };

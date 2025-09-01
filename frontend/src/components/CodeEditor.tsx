@@ -71,7 +71,7 @@ export const CodeEditor = ({
         handleChange(formatted);
       }
     } catch (error) {
-      // Ignore formatting errors
+      console.warn('JSON formatting failed:', error);
     }
   };
 

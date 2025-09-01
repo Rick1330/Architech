@@ -8,8 +8,7 @@ import {
   Activity, 
   AlertCircle, 
   CheckCircle, 
-  Zap,
-  ArrowRight
+  Zap
 } from 'lucide-react';
 
 interface ArchitectEdgeProps {
@@ -157,27 +156,31 @@ export const EnhancedArchitectEdge = memo(({
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
           }}
         >
-          {(isSelected || data?.status === 'error' || data?.throughput) && (
+          {Boolean(isSelected || data?.status === 'error' || (data?.throughput && data.throughput > 0)) && (
             <div className="flex items-center gap-2">
               {/* Status Badge */}
-              {data?.status && data.status !== 'idle' && (
-                <Badge 
-                  variant="outline" 
-                  className={`text-xs bg-card/90 backdrop-blur-sm ${
-                    data.status === 'active' ? 'border-status-active text-status-active' :
-                    data.status === 'error' ? 'border-status-error text-status-error' :
-                    'border-status-active text-status-active'
-                  }`}
-                >
-                  {data.status === 'active' && <Activity className="h-3 w-3 mr-1" />}
-                  {data.status === 'error' && <AlertCircle className="h-3 w-3 mr-1" />}
-                  {data.status === 'success' && <CheckCircle className="h-3 w-3 mr-1" />}
-                  {data.status}
-                </Badge>
-              )}
+              {data?.status && data.status !== 'idle' && (() => {
+                const getStatusClasses = () => {
+                  if (data.status === 'active') return 'border-status-active text-status-active';
+                  if (data.status === 'error') return 'border-status-error text-status-error';
+                  return 'border-status-active text-status-active';
+                };
+                
+                return (
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs bg-card/90 backdrop-blur-sm ${getStatusClasses()}`}
+                  >
+                    {data.status === 'active' && <Activity className="h-3 w-3 mr-1" />}
+                    {data.status === 'error' && <AlertCircle className="h-3 w-3 mr-1" />}
+                    {data.status === 'success' && <CheckCircle className="h-3 w-3 mr-1" />}
+                    {data.status}
+                  </Badge>
+                );
+              })()}
 
               {/* Throughput Indicator */}
-              {data?.throughput && data.throughput > 0 && (
+              {Boolean(data?.throughput && data.throughput > 0) && (
                 <Badge variant="outline" className="text-xs bg-card/90 backdrop-blur-sm">
                   <Zap className="h-3 w-3 mr-1" />
                   {data.throughput}/s
@@ -185,7 +188,7 @@ export const EnhancedArchitectEdge = memo(({
               )}
 
               {/* Protocol Badge */}
-              {data?.protocol && isSelected && (
+              {Boolean(data?.protocol && data.protocol.length > 0 && isSelected) && (
                 <Badge variant="secondary" className="text-xs bg-card/90 backdrop-blur-sm">
                   {data.protocol}
                 </Badge>

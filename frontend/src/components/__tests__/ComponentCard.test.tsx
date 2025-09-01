@@ -47,7 +47,8 @@ describe('ComponentCard', () => {
       />
     );
 
-    const favoriteButton = screen.getByRole('button');
+    const buttons = screen.getAllByRole('button');
+    const favoriteButton = buttons[1]; // The second button is the favorite button
     await user.click(favoriteButton);
 
     expect(mockOnToggleFavorite).toHaveBeenCalledWith(mockComponent.id);

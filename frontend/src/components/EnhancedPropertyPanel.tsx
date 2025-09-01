@@ -1,5 +1,5 @@
-import { memo, useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { useState } from 'react';
+import { useArchitectStore, ComponentProperty } from '@/stores/useArchitectStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,16 +12,12 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { CodeEditor } from '@/components/CodeEditor';
-import { useArchitectStore, ComponentProperty } from '@/stores/useArchitectStore';
 import { 
   X, 
   Settings, 
   BarChart3, 
   FileText, 
   Info,
-  Cpu,
-  MemoryStick,
-  Network,
   Clock,
   Activity,
   AlertCircle,
@@ -29,7 +25,37 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
+// Type alias for property change handlers to avoid repetition
+type PropertyChangeHandler = (value: string | number | boolean) => void;
+
+const MetricsChart = ({ title, value, max = 100, unit = '%', status = 'normal' }: {
+  title: string;
+  value: number;
+  max?: number;
+  unit?: string;
+  status?: 'normal' | 'warning' | 'error';
+}) => {
+  const percentage = (value / max) * 100;
+  const getColor = () => {
+    if (status === 'error' || percentage > 90) return 'bg-status-error';
+    if (status === 'warning' || percentage > 75) return 'bg-status-warning';
+    return 'bg-status-active';
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between text-sm">
+        <span>{title}</span>
+        <span className="font-medium">{value}{unit}</span>
+      </div>
+      <Progress value={percentage} className={`h-2 ${getColor()}`} />
+    </div>
+  );
+};
+
 const EnhancedPropertyPanel = () => {
+  const [activeTab, setActiveTab] = useState('config');
+  
   const {
     selectedNodeId,
     selectedEdgeId,
@@ -41,7 +67,19 @@ const EnhancedPropertyPanel = () => {
     selectEdge,
   } = useArchitectStore();
 
-  const [activeTab, setActiveTab] = useState('config');
+  type MetricStatusType = 'normal' | 'warning' | 'error';
+
+const getMetricStatus = (value: number, warningThreshold: number, errorThreshold: number): MetricStatusType => {
+    if (value > errorThreshold) return 'error';
+    if (value > warningThreshold) return 'warning';
+    return 'normal';
+  };
+
+  const getBadgeVariant = (level: string) => {
+    if (level === 'error') return 'destructive';
+    if (level === 'warn') return 'secondary';
+    return 'outline';
+  };
 
   const selectedNode = selectedNodeId ? nodes.find(node => node.id === selectedNodeId) : null;
   const selectedEdge = selectedEdgeId ? edges.find(edge => edge.id === selectedEdgeId) : null;
@@ -51,6 +89,120 @@ const EnhancedPropertyPanel = () => {
     selectNode(null);
     selectEdge(null);
   };
+
+  const renderStringProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler, hasValidation: boolean) => (
+    <div className="space-y-2">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <Input
+        id={property.id}
+        value={String(property.value || '')}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder={`Enter ${property.name.toLowerCase()}`}
+        className={hasValidation ? 'border-status-error' : ''}
+      />
+      {hasValidation && (
+        <p className="text-xs text-status-error">This field is required</p>
+      )}
+    </div>
+  );
+
+  const renderNumberProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="space-y-2">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <Input
+        id={property.id}
+        type="number"
+        value={String(property.value || '')}
+        onChange={(e) => handleChange(Number(e.target.value))}
+        min={property.min}
+        max={property.max}
+        step={property.step}
+        placeholder={`Enter ${property.name.toLowerCase()}`}
+      />
+    </div>
+  );
+
+  const renderSliderProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="space-y-2">
+      <div className="flex justify-between">
+        <Label htmlFor={property.id}>{property.name}</Label>
+        <span className="text-sm text-muted-foreground">{property.value || property.min || 0}</span>
+      </div>
+      <Slider
+        value={[Number(property.value) || property.min || 0]}
+        onValueChange={(values) => handleChange(values[0])}
+        min={property.min || 0}
+        max={property.max || 100}
+        step={property.step || 1}
+        className="w-full"
+      />
+    </div>
+  );
+
+  const renderTextareaProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="space-y-2">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <Textarea
+        id={property.id}
+        value={String(property.value || '')}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder={`Enter ${property.name.toLowerCase()}`}
+        rows={3}
+      />
+    </div>
+  );
+
+  const renderSelectProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="space-y-2">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <Select value={String(property.value || '')} onValueChange={handleChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={`Select ${property.name.toLowerCase()}`} />
+        </SelectTrigger>
+        <SelectContent>
+          {property.options?.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const renderBooleanProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="flex items-center justify-between">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <Switch
+        id={property.id}
+        checked={Boolean(property.value)}
+        onCheckedChange={handleChange}
+      />
+    </div>
+  );
+
+  const renderCodeProperty = (property: ComponentProperty, handleChange: PropertyChangeHandler) => (
+    <div className="space-y-2">
+      <Label htmlFor={property.id}>{property.name}</Label>
+      <CodeEditor
+        value={typeof property.value === 'string' ? property.value : JSON.stringify(property.value || {}, null, 2)}
+        onChange={(value) => {
+          if (property.type === 'json') {
+            try {
+              handleChange(JSON.parse(value));
+            } catch {
+              handleChange(value); // Keep as string if invalid JSON
+            }
+          } else {
+            handleChange(value);
+          }
+        }}
+        language={property.type === 'json' ? 'json' : 'javascript'}
+        placeholder={`Enter ${property.name.toLowerCase()}`}
+        height="150px"
+      />
+    </div>
+  );
 
   const renderPropertyInput = (property: ComponentProperty) => {
     const handleChange = (value: string | number | boolean) => {
@@ -63,155 +215,23 @@ const EnhancedPropertyPanel = () => {
 
     switch (property.type) {
       case 'string':
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <Input
-              id={property.id}
-              value={String(property.value || '')}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={`Enter ${property.name.toLowerCase()}`}
-              className={hasValidation ? 'border-status-error' : ''}
-            />
-            {hasValidation && (
-              <p className="text-xs text-status-error">This field is required</p>
-            )}
-          </div>
-        );
-
+        return renderStringProperty(property, handleChange, hasValidation);
       case 'number':
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <Input
-              id={property.id}
-              type="number"
-              value={String(property.value || '')}
-              onChange={(e) => handleChange(Number(e.target.value))}
-              min={property.min}
-              max={property.max}
-              step={property.step}
-              placeholder={`Enter ${property.name.toLowerCase()}`}
-            />
-          </div>
-        );
-
+        return renderNumberProperty(property, handleChange);
       case 'slider':
-        return (
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor={property.id}>{property.name}</Label>
-              <span className="text-sm text-muted-foreground">{property.value || property.min || 0}</span>
-            </div>
-            <Slider
-              value={[Number(property.value) || property.min || 0]}
-              onValueChange={(values) => handleChange(values[0])}
-              min={property.min || 0}
-              max={property.max || 100}
-              step={property.step || 1}
-              className="w-full"
-            />
-          </div>
-        );
-
+        return renderSliderProperty(property, handleChange);
       case 'textarea':
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <Textarea
-              id={property.id}
-              value={String(property.value || '')}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={`Enter ${property.name.toLowerCase()}`}
-              rows={3}
-            />
-          </div>
-        );
-
+        return renderTextareaProperty(property, handleChange);
       case 'select':
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <Select value={String(property.value || '')} onValueChange={handleChange}>
-              <SelectTrigger>
-                <SelectValue placeholder={`Select ${property.name.toLowerCase()}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {property.options?.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
+        return renderSelectProperty(property, handleChange);
       case 'boolean':
-        return (
-          <div className="flex items-center justify-between">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <Switch
-              id={property.id}
-              checked={Boolean(property.value)}
-              onCheckedChange={handleChange}
-            />
-          </div>
-        );
-
+        return renderBooleanProperty(property, handleChange);
       case 'json':
       case 'code':
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={property.id}>{property.name}</Label>
-            <CodeEditor
-              value={typeof property.value === 'string' ? property.value : JSON.stringify(property.value || {}, null, 2)}
-              onChange={(value) => {
-                if (property.type === 'json') {
-                  try {
-                    handleChange(JSON.parse(value));
-                  } catch {
-                    handleChange(value); // Keep as string if invalid JSON
-                  }
-                } else {
-                  handleChange(value);
-                }
-              }}
-              language={property.type === 'json' ? 'json' : 'javascript'}
-              placeholder={`Enter ${property.name.toLowerCase()}`}
-              height="150px"
-            />
-          </div>
-        );
-
+        return renderCodeProperty(property, handleChange);
       default:
         return null;
     }
-  };
-
-  const MetricsChart = ({ title, value, max = 100, unit = '%', status = 'normal' }: {
-    title: string;
-    value: number;
-    max?: number;
-    unit?: string;
-    status?: 'normal' | 'warning' | 'error';
-  }) => {
-    const percentage = (value / max) * 100;
-    const getColor = () => {
-      if (status === 'error' || percentage > 90) return 'bg-status-error';
-      if (status === 'warning' || percentage > 75) return 'bg-status-warning';
-      return 'bg-status-active';
-    };
-
-    return (
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>{title}</span>
-          <span className="font-medium">{value}{unit}</span>
-        </div>
-        <Progress value={percentage} className="h-2" />
-      </div>
-    );
   };
 
   if (!selectedNode && !selectedEdge) {
@@ -307,13 +327,13 @@ const EnhancedPropertyPanel = () => {
                 <MetricsChart
                   title="CPU Usage"
                   value={nodeStatus.metrics.cpu}
-                  status={nodeStatus.metrics.cpu > 80 ? 'error' : nodeStatus.metrics.cpu > 60 ? 'warning' : 'normal'}
+                  status={getMetricStatus(nodeStatus.metrics.cpu, 60, 80)}
                 />
                 
                 <MetricsChart
                   title="Memory Usage"
                   value={nodeStatus.metrics.memory}
-                  status={nodeStatus.metrics.memory > 85 ? 'error' : nodeStatus.metrics.memory > 70 ? 'warning' : 'normal'}
+                  status={getMetricStatus(nodeStatus.metrics.memory, 70, 85)}
                 />
                 
                 <MetricsChart
@@ -354,11 +374,11 @@ const EnhancedPropertyPanel = () => {
           <ScrollArea className="h-full p-4">
             {nodeStatus?.logs && nodeStatus.logs.length > 0 ? (
               <div className="space-y-2">
-                {nodeStatus.logs.map((log, index) => (
-                  <div key={index} className="p-2 bg-muted/30 rounded text-xs font-mono">
+                {nodeStatus.logs.map((log) => (
+                  <div key={`${log.timestamp}-${log.level}-${log.message}`} className="p-2 bg-muted/30 rounded text-xs font-mono">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge 
-                        variant={log.level === 'error' ? 'destructive' : log.level === 'warn' ? 'secondary' : 'outline'}
+                        variant={getBadgeVariant(log.level)}
                         className="text-xs"
                       >
                         {log.level}

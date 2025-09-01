@@ -1,13 +1,14 @@
 /**
  * Authentication Hook
- * Manages user authentication state and operations
+ * Manages user authentication state and operations  
  */
 
 import { useState, useEffect, useCallback } from 'react';
+// Core lib imports - updated
 import { apiClient } from '@/lib/api/client';
 import { simulationWebSocket } from '@/lib/websocket/client';
 import { logger } from '@/lib/logger';
-import { errorHandler, ErrorType } from '@/lib/errorHandler';
+import { errorHandler } from '@/lib/errorHandler';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@/types';
 
@@ -56,7 +57,8 @@ export const useAuth = () => {
         
         logger.debug('No authenticated user found', {
           componentName: 'useAuth',
-          action: 'auth_init_no_user'
+          action: 'auth_init_no_user',
+          payload: { error: error instanceof Error ? error.message : 'Unknown error' }
         });
       }
     };
@@ -199,6 +201,11 @@ export const useAuth = () => {
       return user;
     } catch (error) {
       // If refresh fails, user might be logged out
+      logger.error('User refresh failed', {
+        componentName: 'useAuth',
+        action: 'refresh_user_error',
+        payload: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
       logout();
       throw error;
     }

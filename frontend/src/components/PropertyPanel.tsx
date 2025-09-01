@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { useArchitectStore } from '@/stores/useArchitectStore';
-import { ComponentProperty } from '@/stores/useArchitectStore';
+import { useArchitectStore, ComponentProperty } from '@/stores/useArchitectStore';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -10,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Settings, Activity, Terminal, X } from 'lucide-react';
 
 export const PropertyPanel = () => {

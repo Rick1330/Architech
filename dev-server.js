@@ -95,7 +95,7 @@ app.post('/api/v1/auth/login', (req, res) => {
 });
 
 app.post('/api/v1/auth/register', (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, name } = req.body;
   
   const newUser = {
     id: String(users.length + 1),

@@ -10,11 +10,12 @@
     "install-deps": "npm install && cd frontend && npm install"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "concurrently": "^8.2.0"
   }
 }

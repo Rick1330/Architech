@@ -2,10 +2,16 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button.variants";
+
+// Simple utility function for combining class names
+const cn = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(" ");
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+
+// Icon components moved outside to comply with SonarQube S6478
+const CalendarIconLeft = () => <ChevronLeft className="h-4 w-4" />;
+const CalendarIconRight = () => <ChevronRight className="h-4 w-4" />;
 
 function Calendar({
   className,
@@ -52,8 +58,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: CalendarIconLeft,
+        IconRight: CalendarIconRight,
       }}
       {...props}
     />

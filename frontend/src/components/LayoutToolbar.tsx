@@ -10,8 +10,6 @@ import {
   AlignVerticalJustifyEnd,
   AlignCenter,
   AlignHorizontalDistributeCenter,
-  Move3D,
-  Layers,
   Group,
   Ungroup
 } from 'lucide-react';

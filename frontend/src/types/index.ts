@@ -1,5 +1,5 @@
 // Core types for the Architech application
-import { Node, Edge, Connection } from '@xyflow/react';
+import { Node, Edge } from '@xyflow/react';
 
 // Component Types
 export interface ComponentType {
@@ -174,6 +174,66 @@ export interface StoreActions {
   setComponentTypes: (types: ComponentType[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+}
+
+// Project Types
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  designs?: Design[];
+}
+
+export interface ProjectCreateData {
+  name: string;
+  description?: string;
+}
+
+export interface ProjectUpdateData {
+  name?: string;
+  description?: string;
+}
+
+// Design API Types
+export interface Design {
+  id: string;
+  name: string;
+  description?: string;
+  project_id: string;
+  version: number;
+  design_data: {
+    nodes: ArchitectNode[];
+    edges: ArchitectEdge[];
+    viewport?: { x: number; y: number; zoom: number };
+  };
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DesignCreateData {
+  name: string;
+  description?: string;
+  design_data: {
+    nodes: ArchitectNode[];
+    edges: ArchitectEdge[];
+    viewport?: { x: number; y: number; zoom: number };
+  };
+  metadata?: Record<string, unknown>;
+}
+
+export interface DesignUpdateData {
+  name?: string;
+  description?: string;
+  design_data?: {
+    nodes: ArchitectNode[];
+    edges: ArchitectEdge[];
+    viewport?: { x: number; y: number; zoom: number };
+  };
+  metadata?: Record<string, unknown>;
 }
 
 // Auth Types

@@ -1,11 +1,146 @@
 import { create } from 'zustand';
 import { Node, Edge, Connection, NodeChange, EdgeChange } from '@xyflow/react';
 
+// Type alias for alignment options
+type AlignmentType = 'left' | 'right' | 'top' | 'bottom' | 'center';
+
+// Type alias for property values
+type PropertyValue = string | number | boolean;
+
+// Helper functions to reduce nesting depth
+const calculateAlignValue = (
+  alignment: AlignmentType,
+  selectedNodes: Node[]
+): number => {
+  switch (alignment) {
+    case 'left':
+      return Math.min(...selectedNodes.map(node => node.position.x));
+    case 'right':
+      return Math.max(...selectedNodes.map(node => node.position.x + (node.measured?.width || 200)));
+    case 'top':
+      return Math.min(...selectedNodes.map(node => node.position.y));
+    case 'bottom':
+      return Math.max(...selectedNodes.map(node => node.position.y + (node.measured?.height || 100)));
+    case 'center':
+      return selectedNodes.reduce((sum, n) => sum + n.position.x, 0) / selectedNodes.length;
+    default:
+      return 0;
+  }
+};
+
+// Helper function for auto-layout positioning
+const calculateAutoLayoutPosition = (index: number) => {
+  const row = Math.floor(index / 4);
+  const col = index % 4;
+  return {
+    x: col * 250 + 50,
+    y: row * 150 + 50,
+  };
+};
+
+// Helper function to update project last modified time
+const updateProjectModifiedTime = (
+  project: { id: string; name: string; description?: string; lastModified: number }, 
+  currentProjectId?: string
+) => 
+  project.id === currentProjectId 
+    ? { ...project, lastModified: Date.now() }
+    : project;
+
+// Helper function to apply auto-layout to a node
+const applyAutoLayout = (node: Node, index: number): Node => ({
+  ...node,
+  position: calculateAutoLayoutPosition(index),
+});
+
+const applyAlignment = (
+  node: Node,
+  alignment: AlignmentType,
+  alignValue: number
+): Node => {
+  if (!node.selected) return node;
+  
+  switch (alignment) {
+    case 'left':
+      return { ...node, position: { ...node.position, x: alignValue } };
+    case 'right':
+      return { ...node, position: { ...node.position, x: alignValue - (node.measured?.width || 200) } };
+    case 'top':
+      return { ...node, position: { ...node.position, y: alignValue } };
+    case 'bottom':
+      return { ...node, position: { ...node.position, y: alignValue - (node.measured?.height || 100) } };
+    case 'center':
+      return { ...node, position: { ...node.position, x: alignValue } };
+    default:
+      return node;
+  }
+};
+
+// Helper function to apply node changes
+const applyNodeChange = (node: Node, changes: NodeChange[]): Node => {
+  const change = changes.find((c: NodeChange) => 'id' in c && c.id === node.id);
+  if (change && typeof change === 'object') {
+    return { ...node, ...change };
+  }
+  return node;
+};
+
+// Helper function to apply edge changes
+const applyEdgeChange = (edge: Edge, changes: EdgeChange[]): Edge => {
+  const change = changes.find((c: EdgeChange) => 'id' in c && c.id === edge.id);
+  if (change && typeof change === 'object') {
+    return { ...edge, ...change };
+  }
+  return edge;
+};
+
+// Helper function to update node properties
+const updateNodeWithProperty = (
+  node: Node,
+  nodeId: string,
+  propertyId: string,
+  value: PropertyValue
+): Node => {
+  if (node.id !== nodeId) return node;
+  
+  const properties = (node.data?.properties as ComponentProperty[]) || [];
+  const updatedProperties = properties.map((prop: ComponentProperty) => 
+    prop.id === propertyId ? { ...prop, value } : prop
+  );
+  
+  return {
+    ...node,
+    data: {
+      ...node.data,
+      properties: updatedProperties,
+    },
+  };
+};
+
+const calculateDistributedPosition = (
+  node: Node,
+  selectedNodes: Node[],
+  direction: 'horizontal' | 'vertical',
+  first: Node,
+  spacing: number
+): Node => {
+  const index = selectedNodes.findIndex(n => n.id === node.id);
+  if (index <= 0 || index >= selectedNodes.length - 1) {
+    return node;
+  }
+  
+  const newPosition = direction === 'horizontal'
+    ? { ...node.position, x: first.position.x + spacing * index }
+    : { ...node.position, y: first.position.y + spacing * index };
+    
+  return { ...node, position: newPosition };
+};
+
 export interface ComponentProperty {
   id: string;
   name: string;
   type: 'string' | 'number' | 'boolean' | 'select' | 'textarea' | 'json' | 'slider' | 'code';
-  value: string | number | boolean;
+  value: PropertyValue;
   options?: string[];
   min?: number;
   max?: number;
@@ -115,12 +250,12 @@ interface ArchitectStore {
   selectNode: (nodeId: string | null) => void;
   selectEdge: (edgeId: string | null) => void;
   
-  updateNodeProperty: (nodeId: string, propertyId: string, value: string | number | boolean) => void;
+  updateNodeProperty: (nodeId: string, propertyId: string, value: PropertyValue) => void;
   updateNodeStatus: (nodeId: string, status: NodeStatus) => void;
   
   // Auto-layout actions
   autoLayoutNodes: () => void;
-  alignNodes: (alignment: 'left' | 'right' | 'top' | 'bottom' | 'center') => void;
+  alignNodes: (alignment: AlignmentType) => void;
   distributeNodes: (direction: 'horizontal' | 'vertical') => void;
   
   // Simulation actions
@@ -210,33 +345,21 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
   
   onNodesChange: (changes) => {
     set((state) => ({
-      nodes: state.nodes.map((node) => {
-        const change = changes.find((c: NodeChange) => 'id' in c && c.id === node.id);
-        if (change && typeof change === 'object') {
-          return { ...node, ...change };
-        }
-        return node;
-      }),
+      nodes: state.nodes.map((node) => applyNodeChange(node, changes as NodeChange[])),
     }));
   },
   
   onEdgesChange: (changes) => {
     set((state) => ({
-      edges: state.edges.map((edge) => {
-        const change = changes.find((c: EdgeChange) => 'id' in c && c.id === edge.id);
-        if (change && typeof change === 'object') {
-          return { ...edge, ...change };
-        }
-        return edge;
-      }),
+      edges: state.edges.map((edge) => applyEdgeChange(edge, changes as EdgeChange[])),
     }));
   },
   
   onConnect: (connection) => {
     const newEdge: Edge = {
       id: `edge-${Date.now()}`,
-      source: connection.source!,
-      target: connection.target!,
+      source: connection.source || '',
+      target: connection.target || '',
       sourceHandle: connection.sourceHandle,
       targetHandle: connection.targetHandle,
       type: 'architech',
@@ -258,22 +381,9 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
   
   updateNodeProperty: (nodeId, propertyId, value) => {
     set((state) => ({
-      nodes: state.nodes.map((node) => {
-        if (node.id === nodeId) {
-          const properties = (node.data?.properties as ComponentProperty[]) || [];
-          const updatedProperties = properties.map((prop: ComponentProperty) => 
-            prop.id === propertyId ? { ...prop, value } : prop
-          );
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              properties: updatedProperties,
-            },
-          };
-        }
-        return node;
-      }),
+      nodes: state.nodes.map((node) => 
+        updateNodeWithProperty(node, nodeId, propertyId, value)
+      ),
     }));
   },
 
@@ -293,18 +403,7 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
     const nodes = state.nodes;
     if (nodes.length === 0) return;
 
-    const layoutNodes = nodes.map((node, index) => {
-      const row = Math.floor(index / 4);
-      const col = index % 4;
-      return {
-        ...node,
-        position: {
-          x: col * 250 + 50,
-          y: row * 150 + 50,
-        },
-      };
-    });
-
+    const layoutNodes = nodes.map(applyAutoLayout);
     set({ nodes: layoutNodes });
   },
 
@@ -313,42 +412,8 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
     const selectedNodes = state.nodes.filter(node => node.selected);
     if (selectedNodes.length < 2) return;
 
-    const alignValue = selectedNodes.reduce((acc, node) => {
-      switch (alignment) {
-        case 'left':
-          return Math.min(acc, node.position.x);
-        case 'right':
-          return Math.max(acc, node.position.x + (node.measured?.width || 200));
-        case 'top':
-          return Math.min(acc, node.position.y);
-        case 'bottom':
-          return Math.max(acc, node.position.y + (node.measured?.height || 100));
-        case 'center':
-          return alignment === 'center' ? 
-            selectedNodes.reduce((sum, n) => sum + n.position.x, 0) / selectedNodes.length :
-            acc;
-        default:
-          return acc;
-      }
-    }, alignment === 'left' || alignment === 'top' ? Infinity : -Infinity);
-
-    const alignedNodes = state.nodes.map(node => {
-      if (node.selected) {
-        switch (alignment) {
-          case 'left':
-            return { ...node, position: { ...node.position, x: alignValue } };
-          case 'right':
-            return { ...node, position: { ...node.position, x: alignValue - (node.measured?.width || 200) } };
-          case 'top':
-            return { ...node, position: { ...node.position, y: alignValue } };
-          case 'bottom':
-            return { ...node, position: { ...node.position, y: alignValue - (node.measured?.height || 100) } };
-          case 'center':
-            return { ...node, position: { ...node.position, x: alignValue } };
-        }
-      }
-      return node;
-    });
+    const alignValue = calculateAlignValue(alignment, selectedNodes);
+    const alignedNodes = state.nodes.map(node => applyAlignment(node, alignment, alignValue));
 
     set({ nodes: alignedNodes });
   },
@@ -369,16 +434,9 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
     
     const spacing = totalSpace / (selectedNodes.length - 1);
 
-    const distributedNodes = state.nodes.map(node => {
-      const index = selectedNodes.findIndex(n => n.id === node.id);
-      if (index > 0 && index < selectedNodes.length - 1) {
-        const newPosition = direction === 'horizontal' ?
-          { ...node.position, x: first.position.x + spacing * index } :
-          { ...node.position, y: first.position.y + spacing * index };
-        return { ...node, position: newPosition };
-      }
-      return node;
-    });
+    const distributedNodes = state.nodes.map(node => 
+      calculateDistributedPosition(node, selectedNodes, direction, first, spacing)
+    );
 
     set({ nodes: distributedNodes });
   },
@@ -513,9 +571,7 @@ export const useArchitectStore = create<ArchitectStore>((set, get) => ({
     if (state.currentProject) {
       set((currentState) => ({
         projects: currentState.projects.map(p => 
-          p.id === currentState.currentProject?.id 
-            ? { ...p, lastModified: Date.now() }
-            : p
+          updateProjectModifiedTime(p, currentState.currentProject?.id)
         ),
         currentProject: state.currentProject ? {
           ...state.currentProject,

@@ -15,5 +15,10 @@
     "allowJs": true,
     "noUnusedLocals": false,
     "strictNullChecks": false
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "**/node_modules/**",
+    "**/node_modules/**/tsconfig.json"
+  ]
 }

@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+// API and WebSocket imports  
 import { apiClient } from '@/lib/api/client';
 import { simulationWebSocket, SimulationMessage } from '@/lib/websocket/client';
 import { logger } from '@/lib/logger';
@@ -29,10 +30,7 @@ export const useSimulation = () => {
     addSimulationEvent,
     updateNodeStatus,
     startSimulation: startStoreSimulation,
-    stopSimulation: stopStoreSimulation,
-    setSimulationSpeed,
-    nodes,
-    edges 
+    stopSimulation: stopStoreSimulation
   } = useArchitectStore();
 
   /**
@@ -65,7 +63,7 @@ export const useSimulation = () => {
       case 'simulation_event':
         addSimulationEvent({
           time: Date.now(),
-          type: message.data.event_type || 'info',
+          type: (message.data.event_type as 'info' | 'warning' | 'error' | 'success') || 'info',
           message: message.data.message || 'Simulation event',
           componentId: message.data.component_id,
           data: message.data
@@ -75,10 +73,11 @@ export const useSimulation = () => {
       case 'simulation_metric':
         if (message.data.component_id && message.data.component_type === 'node') {
           updateNodeStatus(message.data.component_id, {
-            status: message.data.status || 'active',
+            status: (message.data.status as 'idle' | 'active' | 'warning' | 'error') || 'active',
             metrics: {
               cpu: message.data.cpu || 0,
               memory: message.data.memory || 0,
+              requests: message.data.requests || 0,
               latency: message.data.latency || 0,
               ...message.data.metrics
             }
